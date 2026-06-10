@@ -9,7 +9,14 @@ from typing import List
 import platformdirs
 from json import dump, load
 
-from typatro.src.blind import BlindDef, BossBlind, apply_boss_debuff, compute_target, get_blind_for_index
+from typatro.src.blind import (
+    BlindDef,
+    BossBlind,
+    apply_boss_debuff,
+    clear_boss_debuffs,
+    compute_target,
+    get_blind_for_index,
+)
 from typatro.src.jokers import MAX_JOKERS, JokerDef, get_joker_by_id, jokers_from_ids
 from typatro.src.parser import config_parser
 
@@ -102,6 +109,11 @@ class RunStateManager:
         self.config_path = Path(platformdirs.user_config_dir("typatro"))
         self.file_path = self.config_path / "run.json"
         self.state = self.load()
+        self._app = None
+
+    def set_active_app(self, app) -> None:
+        """Bind the running TUI so reset can refresh sidebar widgets."""
+        self._app = app
 
     def load(self) -> RunState:
         if not self.file_path.exists():
@@ -116,8 +128,23 @@ class RunStateManager:
 
     def reset(self) -> RunState:
         self.state.reset_run()
+        clear_boss_debuffs()
         self.save()
+        self._refresh_ui()
         return self.state
+
+    def _refresh_ui(self) -> None:
+        if self._app is None:
+            return
+        try:
+            from typatro.ui.widgets import Space
+            from typatro.ui.widgets.balatro import JokerRow
+
+            main = self._app.get_screen("main")
+            main.query_one(Space).reset_components()
+            main.query_one(JokerRow).update_jokers(self.state.jokers)
+        except Exception:
+            pass
 
 
 run_manager = RunStateManager()

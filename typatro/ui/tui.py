@@ -134,6 +134,7 @@ class Typatro(App):
 
     async def on_mount(self) -> None:
         self.push_screen("main")
+        run_manager.set_active_app(self)
 
     @on(ApplyLanguage)
     def apply_language(self, event: ApplyLanguage) -> None:
