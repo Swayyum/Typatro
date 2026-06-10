@@ -1,0 +1,15 @@
+$bg-color: #1e2b3c;
+$main-color: #eac058;
+$caret-color: #eac058;
+$sub-color: #8a9bb5;
+$sub-alt-color: #274237;
+$text-color: #f4f4f4;
+$error-color: #fe5f55;
+$error-extra-color: #ff9a00;
+$colorful-error-color: #fe5f55;
+$colorful-error-extra-color: #ff9a00;
+$chips-color: #0093ff;
+$mult-color: #fe5f55;
+$gold-color: #eac058;
+$card-bg: #f4f4f4;
+$card-text: #1e2b3c;
