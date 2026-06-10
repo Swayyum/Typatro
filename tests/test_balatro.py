@@ -120,18 +120,19 @@ def test_last_word_accuracy_with_only_backspaces_raises_value_error():
         stats.last_word_accuracy
 
 
-def test_reel_spin_locks_left_to_right():
-    from typatro.src.slot_machine import ReelSpin
+def test_logo_reel_locks_left_to_right():
+    from typatro.src.slot_machine import LogoReelEngine
 
-    reel = ReelSpin(target="typatro")
+    engine = LogoReelEngine(target="typatro")
     frames = 0
-    while not reel.done and frames < 200:
-        out = reel.tick()
+    while not engine.done and frames < 400:
+        engine.tick()
         frames += 1
-        assert len(out) == len("typatro")
-        locked = reel.locked_count()
-        assert out[: min(locked, 7)] == "typatro"[: min(locked, 7)]
-    assert reel.done
+        locked = sum(1 for col in engine.columns if col.state == "stopped")
+        for index in range(locked):
+            assert engine.columns[index].display == engine.columns[index].target.upper()
+    assert engine.done
+    assert [col.display for col in engine.columns] == [c.upper() for c in "typatro"]
 
 
 def test_odometer_rolls_to_target():

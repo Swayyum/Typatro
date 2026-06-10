@@ -82,19 +82,16 @@ def apply_boss_debuff(boss: Optional[BossBlind]) -> None:
     if not boss:
         return
 
-    match boss:
-        case BossBlind.THE_HOOK:
-            config_parser.set("blind_mode", "on")
-        case BossBlind.THE_WALL:
-            pass  # Higher target handled in compute_target
-        case BossBlind.THE_NEEDLE:
-            config_parser.set("min_speed", 40)
-        case BossBlind.THE_EYE:
-            config_parser.set("confidence_mode", "on")
-        case BossBlind.THE_PSYCHIC:
-            config_parser.set("force_correct", "on")
-        case _:
-            pass
+    if boss == BossBlind.THE_HOOK:
+        config_parser.set("blind_mode", "on")
+    elif boss == BossBlind.THE_WALL:
+        pass  # Higher target handled in compute_target
+    elif boss == BossBlind.THE_NEEDLE:
+        config_parser.set("min_speed", 40)
+    elif boss == BossBlind.THE_EYE:
+        config_parser.set("confidence_mode", "on")
+    elif boss == BossBlind.THE_PSYCHIC:
+        config_parser.set("force_correct", "on")
 
 
 def clear_boss_debuffs() -> None:

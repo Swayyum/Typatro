@@ -17,11 +17,12 @@ class JokerOption(Widget):
 
     DEFAULT_CSS = """
     JokerOption {
-        width: 1fr;
+        width: 26;
         height: auto;
         padding: 1 2;
         margin: 0 1;
         content-align: center middle;
+        text-align: center;
     }
     """
 
@@ -41,16 +42,19 @@ class JokerOption(Widget):
         return text
 
 
-class JokerChoiceScreen(Screen):
-    """Pick 1 of 3 jokers after beating a blind."""
+class JokerChoicePanel(Widget):
+    """Centered modal panel for the joker pick screen."""
 
     DEFAULT_CSS = """
-    JokerChoiceScreen {
+    JokerChoicePanel {
+        width: auto;
+        height: auto;
+        padding: 2 3;
         align: center middle;
     }
 
-    JokerChoiceScreen > Vertical {
-        width: 100%;
+    JokerChoicePanel > Vertical {
+        width: auto;
         height: auto;
         align: center middle;
     }
@@ -59,21 +63,31 @@ class JokerChoiceScreen(Screen):
         text-align: center;
         text-style: bold;
         height: auto;
-        width: 100%;
+        width: auto;
         margin-bottom: 1;
     }
 
     #joker-subtitle {
         text-align: center;
         height: auto;
-        width: 100%;
+        width: auto;
         margin-bottom: 2;
     }
 
     #joker-options {
-        width: 80%;
+        width: auto;
         height: auto;
         layout: horizontal;
+        align: center middle;
+    }
+    """
+
+
+class JokerChoiceScreen(Screen):
+    """Pick 1 of 3 jokers after beating a blind."""
+
+    DEFAULT_CSS = """
+    JokerChoiceScreen {
         align: center middle;
     }
     """
@@ -88,12 +102,13 @@ class JokerChoiceScreen(Screen):
         self._choices = pick_random_jokers(3, self.exclude_ids)
 
     def compose(self) -> ComposeResult:
-        with Vertical():
-            yield Static("Choose a Joker", id="joker-title")
-            yield Static("Pick one to add to your run", id="joker-subtitle")
-            with Horizontal(id="joker-options"):
-                for i, joker in enumerate(self._choices):
-                    yield JokerOption(joker, i)
+        with JokerChoicePanel():
+            with Vertical():
+                yield Static("Choose a Joker", id="joker-title")
+                yield Static("Pick one to add to your run", id="joker-subtitle")
+                with Horizontal(id="joker-options"):
+                    for i, joker in enumerate(self._choices):
+                        yield JokerOption(joker, i)
 
     def action_skip(self) -> None:
         self.dismiss(None)

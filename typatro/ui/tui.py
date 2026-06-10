@@ -148,7 +148,7 @@ class Typatro(App):
         self.app.get_screen("main").query_one(ThemePalette).refresh()
 
     def action_star(self) -> None:
-        webbrowser.open("https://github.com/kraanzu/smassh")
+        webbrowser.open("https://github.com/Swayyum/Typatro")
 
     def action_theme(self, theme: str) -> None:
         generate_theme_file(theme)

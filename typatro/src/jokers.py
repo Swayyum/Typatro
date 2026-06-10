@@ -75,30 +75,28 @@ def apply_joker_effects(jokers: List[JokerDef], ctx: JokerContext) -> tuple[int,
     bonus_mult = 0.0
 
     for joker in jokers:
-        match joker.effect:
-            case JokerEffect.FLAT_MULT:
-                bonus_mult += joker.value
-            case JokerEffect.CHIPS_PER_WORD:
-                if ctx.word_just_completed:
-                    bonus_chips += int(joker.value)
-            case JokerEffect.CHIPS_PER_STREAK:
-                if ctx.streak > 0:
-                    bonus_chips += int(joker.value * min(ctx.streak, 20))
-            case JokerEffect.MULT_ON_PERFECT_WORD:
-                if ctx.word_just_completed and ctx.last_word_perfect:
-                    bonus_chips += int(joker.value)
-            case JokerEffect.CHIPS_LONG_WORD:
-                if ctx.word_just_completed and ctx.last_word_length >= 5:
-                    bonus_chips += int(joker.value)
-            case JokerEffect.CHIPS_CAPITAL:
-                if ctx.last_char_was_capital:
-                    bonus_chips += int(joker.value)
-            case JokerEffect.CHIPS_FLAT:
+        effect = joker.effect
+        if effect == JokerEffect.FLAT_MULT:
+            bonus_mult += joker.value
+        elif effect == JokerEffect.CHIPS_PER_WORD:
+            if ctx.word_just_completed:
                 bonus_chips += int(joker.value)
-            case JokerEffect.MULT_ACCURACY:
-                bonus_mult += joker.value * (ctx.stats.accuracy // 10)
-            case _:
-                pass
+        elif effect == JokerEffect.CHIPS_PER_STREAK:
+            if ctx.streak > 0:
+                bonus_chips += int(joker.value * min(ctx.streak, 20))
+        elif effect == JokerEffect.MULT_ON_PERFECT_WORD:
+            if ctx.word_just_completed and ctx.last_word_perfect:
+                bonus_chips += int(joker.value)
+        elif effect == JokerEffect.CHIPS_LONG_WORD:
+            if ctx.word_just_completed and ctx.last_word_length >= 5:
+                bonus_chips += int(joker.value)
+        elif effect == JokerEffect.CHIPS_CAPITAL:
+            if ctx.last_char_was_capital:
+                bonus_chips += int(joker.value)
+        elif effect == JokerEffect.CHIPS_FLAT:
+            bonus_chips += int(joker.value)
+        elif effect == JokerEffect.MULT_ACCURACY:
+            bonus_mult += joker.value * (ctx.stats.accuracy // 10)
 
     return bonus_chips, bonus_mult
 

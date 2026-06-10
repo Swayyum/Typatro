@@ -1,5 +1,5 @@
 {
-  description = "Flake for Smassh";
+  description = "Flake for Typatro";
 
   inputs.nixpkgs.url = "github:NixOS/nixpkgs/nixos-unstable";
   inputs.flake-utils.url = "github:numtide/flake-utils";
@@ -13,8 +13,8 @@
     flake-utils.lib.eachDefaultSystem (
       system:
       let
-        name = "smassh";
-        version = "3.1.8";
+        name = "typatro";
+        version = "1.0.0";
 
         pkgs = import nixpkgs { inherit system; };
         python3 = pkgs.python312Packages;
@@ -51,7 +51,7 @@
 
         # Deps: Devshell
         devShell = pkgs.mkShell {
-          name = "smassh";
+          name = "typatro";
           buildInputs =
             mainPkgs
             ++ (with python3; [

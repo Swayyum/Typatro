@@ -1,10 +1,11 @@
+import time
 from typing import Optional
+
 from rich.console import RenderableType
-from rich.text import Text
 from textual.reactive import reactive
 from textual.widget import Widget
-from typatro.src import generate_figlet
-from typatro.src.slot_machine import ReelSpin
+
+from typatro.src.slot_machine import LogoReelEngine
 from typatro.ui.events import SetScreen
 
 
@@ -37,39 +38,52 @@ class NavItemBase(Widget):
 
 class Banner(NavItemBase):
     """
-    Big-font title with a slot machine reel-spin intro: letters cycle
-    through random symbols and lock in left to right.
+    Slotslop-style Vegas logo: spaced rainbow letters with per-column reels
+    that spin, decelerate, and lock left-to-right.
     """
 
     DEFAULT_CSS = """
     Banner {
         height: 100%;
+        width: auto;
+        content-align: center middle;
+        padding: 0 1;
     }
     """
 
-    SPIN_INTERVAL = 0.06
+    SPIN_INTERVAL = 0.07  # ~70ms, matches slotslop FRAME_MS
+    RAINBOW_INTERVAL = 0.033  # ~30fps color cycle while idle
 
     is_tall = reactive(True, layout=True, always_update=True)
 
     def __init__(self, text: str, screen_name: Optional[str] = None) -> None:
         super().__init__(text, screen_name)
-        self._reel = ReelSpin(target=text)
-        self._display = text
+        self._engine = LogoReelEngine(target=text)
+
+    def get_content_width(self, container, viewport) -> int:
+        return self._engine.logo_width() + 2  # + horizontal padding
+
+    def get_content_height(self, container, viewport, width: int) -> int:
+        return 3 if self.is_tall else 1
 
     def on_mount(self) -> None:
         self._spin_timer = self.set_interval(self.SPIN_INTERVAL, self._spin_tick)
+        self._rainbow_timer = self.set_interval(self.RAINBOW_INTERVAL, self._rainbow_tick)
 
     def _spin_tick(self) -> None:
-        self._display = self._reel.tick()
-        if self._reel.done:
-            self._display = self.text
-            self._spin_timer.pause()
+        if self._engine.done:
+            return
+        self._engine.tick()
+        self.refresh()
+
+    def _rainbow_tick(self) -> None:
         self.refresh()
 
     def respin(self) -> None:
-        """Restart the reel-spin intro (used on screen changes)."""
-        self._reel = ReelSpin(target=self.text)
+        """Restart the logo reel intro (used on screen changes / click)."""
+        self._engine.reset()
         self._spin_timer.resume()
+        self.refresh()
 
     def on_click(self) -> None:
         self.respin()
@@ -79,12 +93,8 @@ class Banner(NavItemBase):
         self.styles.height = "5" if value else "3"
 
     def render(self) -> RenderableType:
-        spinning = not self._reel.done
-        source = self._display
-        rendered = generate_figlet(source) if self.is_tall else source.upper()
-        if spinning:
-            return Text(rendered, style="bold")
-        return rendered
+        phase = time.monotonic()
+        return self._engine.render_logo(phase, marquee=self.is_tall)
 
 
 class NavItem(NavItemBase):

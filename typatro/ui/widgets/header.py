@@ -29,7 +29,7 @@ class Header(Widget):
         layout: grid;
         grid-size: 4 1;
         grid-rows: 5;
-        grid-columns: 1fr 15 8fr 1fr;
+        grid-columns: 1fr auto 8fr 1fr;
     }
 
     Header > Horizontal {

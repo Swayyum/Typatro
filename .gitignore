@@ -14,10 +14,10 @@ x.py
 styles.tcss
 
 # Extra css files (sass, css, etc)
-/smassh/ui/css/themes/*
+/typatro/ui/css/themes/*
 
 # only allow .tcss
-!/smassh/ui/css/themes/*.tcss
+!/typatro/ui/css/themes/*.tcss
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
@@ -150,7 +150,7 @@ dmypy.json
 .pyre/
 
 # Ignore all language files (keep only english)
-/smassh/assets/languages/*
+/typatro/assets/languages/*
 
-!/smassh/assets/languages/english_1k.json
-!/smassh/assets/languages/english.json
+!/typatro/assets/languages/english_1k.json
+!/typatro/assets/languages/english.json

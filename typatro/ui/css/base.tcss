@@ -325,6 +325,11 @@ JokerChoiceScreen {
   background: $bg-color 80%;
 }
 
+JokerChoicePanel {
+  border: round $gold-color;
+  background: $sub-alt-color;
+}
+
 #joker-title {
   color: $gold-color;
 }

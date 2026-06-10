@@ -15,12 +15,25 @@ A slot-machine typing roguelike for your terminal. Type fast, build **Chips x Mu
 ## Install
 
 ```bash
-pip install -e .
+pip install typatro
 ```
 
-Requires Python 3.9+. A [Nerd Font](https://www.nerdfonts.com/) improves the icons but isn't required.
+For local development (recommended — use a virtual environment):
+
+```bash
+cd Typatro
+python3 -m venv .venv
+source .venv/bin/activate
+pip install --upgrade pip
+pip install -e .
+typatro
+```
+
+Requires Python 3.9+. Homebrew Python blocks global `pip install`; a venv avoids that and keeps `typatro` on your PATH while activated. A [Nerd Font](https://www.nerdfonts.com/) improves the icons but isn't required.
 
 ## Play
+
+Activate the venv first (`source .venv/bin/activate`), then:
 
 ```bash
 typatro            # run mode (default)
