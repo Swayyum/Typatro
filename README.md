@@ -70,4 +70,4 @@ python -m pytest tests/
 
 ## Credits & license
 
-GPL-3.0. Typing-engine foundations derived from [smassh](https://github.com/kraanzu/smassh) by kraanzu; game design, scoring, animations, and UI are original to TYPATRO.
+GPL-3.0. TYPATRO by [Swayyum](https://github.com/Swayyum) — a slot-machine typing roguelike built on a Textual TUI typing engine.

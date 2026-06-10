@@ -5,17 +5,13 @@ from textual.widget import Widget
 from typatro.ui.widgets import BaseWindow
 
 DESCRIPTION = """
-typatro is a TUI based typing test application inspired by MonkeyType
--- A very popular online web-based typing application
+Typatro is a slot-machine typing roguelike for your terminal.
 
-All the other TUI based applications I found were not graphically appealing
-and then I discovered textual which made it possible to create this application.
+Type fast, build Chips × Mult, beat Blinds, collect Jokers, and climb Antes —
+all wrapped in a casino-felt TUI with reel-spin animations.
 
-typatro tries to be a full fledged typing test experience but not missing
-out on looks and feel!
-
-A lot of work is still left to be done and I'll be more than happy to accept
-any ideas and contributions :D
+It builds on a Textual typing-test engine with a Balatro-inspired run mode,
+classic practice mode, and a large theme library.
 
 Thanks for checking out this project!
 """
@@ -25,7 +21,7 @@ STAR = """
 """
 
 OUTRO = """
-Made with ❤️  by kraanzu
+Made with ❤️  by Swayyum
 """
 
 

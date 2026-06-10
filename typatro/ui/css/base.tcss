@@ -120,6 +120,9 @@ PaletteList {
 }
 
 Space {
+  text-style: bold;
+  line-pad: 1;
+
   .--cursor-buddy {
     background: $main-color;
     color: $bg-color;

@@ -177,10 +177,14 @@ class Space(Static):
     def on_show(self) -> None:
         self.reset_newlines()
 
+    def _wrap_width(self) -> int:
+        """Paragraph wrap width, accounting for Space line-pad in CSS."""
+        return max(1, self.size.width - self.styles.line_pad * 2)
+
     def reset_newlines(self) -> None:
         self.newlines = master_generator.get_newlines(
             self.paragraph.plain,
-            self.size.width,
+            self._wrap_width(),
         )
 
     def restart(self, force: bool = False) -> None:
