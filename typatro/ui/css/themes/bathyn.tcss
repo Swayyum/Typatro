@@ -1,0 +1,38 @@
+/* POI Studio — Bathyn brand palette (deep violet, teal waves, magenta hills). */
+$bg-color: #12101a;
+$main-color: #f5f0e8;
+$caret-color: #ffe08a;
+$sub-color: #9b8ec4;
+$sub-alt-color: #2a1f42;
+$text-color: #f5f0e8;
+$error-color: #ff5c7a;
+$error-extra-color: #ff9a6e;
+$colorful-error-color: #ff5c7a;
+$colorful-error-extra-color: #ff9a6e;
+$chips-color: #1db9b0;
+$mult-color: #e848a0;
+$gold-color: #ffe08a;
+$card-bg: #f5f0e8;
+$card-text: #1a1028;
+
+DitherBackground {
+  .--dither-shadow {
+    color: #2a1848 55%;
+  }
+
+  .--dither-teal {
+    color: $chips-color 50%;
+  }
+
+  .--dither-magenta {
+    color: $mult-color 45%;
+  }
+
+  .--dither-gold {
+    color: $gold-color 55%;
+  }
+
+  .--dither-sparkle {
+    color: #c8ff6a 65%;
+  }
+}

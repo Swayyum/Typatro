@@ -31,20 +31,26 @@ class JokerDef:
     icon: str = "♠"
 
 
+# Max streak tiers counted for Streaker (prevents runaway chip growth).
+_STREAKER_STREAK_CAP = 5
+
+# Per-keystroke cap on chip bonuses from all jokers combined.
+MAX_JOKER_CHIPS_PER_KEYSTROKE = 25
+
 JOKER_ROSTER: List[JokerDef] = [
-    JokerDef("joker", "Joker", "+4 Mult", JokerEffect.FLAT_MULT, 4, "♠"),
-    JokerDef("greedy", "Greedy Joker", "+3 Mult", JokerEffect.FLAT_MULT, 3, "♦"),
-    JokerDef("lusty", "Lusty Joker", "+3 Mult", JokerEffect.FLAT_MULT, 3, "♥"),
-    JokerDef("wrathful", "Wrathful Joker", "+3 Mult", JokerEffect.FLAT_MULT, 3, "♣"),
-    JokerDef("fibonacci", "Fibonacci", "+8 Chips per word", JokerEffect.CHIPS_PER_WORD, 8, "φ"),
-    JokerDef("even_steven", "Even Steven", "+4 Chips per word", JokerEffect.CHIPS_PER_WORD, 4, "2"),
-    JokerDef("odd_todd", "Odd Todd", "+31 Chips per word", JokerEffect.CHIPS_PER_WORD, 31, "1"),
-    JokerDef("streaker", "Streaker", "+2 Chips per char streak", JokerEffect.CHIPS_PER_STREAK, 2, "⚡"),
-    JokerDef("scholar", "Scholar", "+20 Chips on perfect word", JokerEffect.MULT_ON_PERFECT_WORD, 20, "📖"),
-    JokerDef("half", "Half Joker", "+15 Chips for 5+ letter words", JokerEffect.CHIPS_LONG_WORD, 15, "½"),
-    JokerDef("raised_fist", "Raised Fist", "+10 Chips on capitals", JokerEffect.CHIPS_CAPITAL, 10, "✊"),
-    JokerDef("banner", "Banner", "+30 Chips flat", JokerEffect.CHIPS_FLAT, 30, "🏳"),
-    JokerDef("mystic", "Mystic Summit", "+0.5 Mult per 10% accuracy", JokerEffect.MULT_ACCURACY, 0.5, "☽"),
+    JokerDef("joker", "Joker", "+2 Mult", JokerEffect.FLAT_MULT, 2, "♠"),
+    JokerDef("greedy", "Greedy Joker", "+2 Mult", JokerEffect.FLAT_MULT, 2, "♦"),
+    JokerDef("lusty", "Lusty Joker", "+2 Mult", JokerEffect.FLAT_MULT, 2, "♥"),
+    JokerDef("wrathful", "Wrathful Joker", "+2 Mult", JokerEffect.FLAT_MULT, 2, "♣"),
+    JokerDef("fibonacci", "Fibonacci", "+4 Chips per word", JokerEffect.CHIPS_PER_WORD, 4, "φ"),
+    JokerDef("even_steven", "Even Steven", "+2 Chips per word", JokerEffect.CHIPS_PER_WORD, 2, "2"),
+    JokerDef("odd_todd", "Odd Todd", "+10 Chips per word", JokerEffect.CHIPS_PER_WORD, 10, "1"),
+    JokerDef("streaker", "Streaker", "+1 Chips per char streak", JokerEffect.CHIPS_PER_STREAK, 1, "⚡"),
+    JokerDef("scholar", "Scholar", "+8 Chips on perfect word", JokerEffect.MULT_ON_PERFECT_WORD, 8, "📖"),
+    JokerDef("half", "Half Joker", "+8 Chips for 5+ letter words", JokerEffect.CHIPS_LONG_WORD, 8, "½"),
+    JokerDef("raised_fist", "Raised Fist", "+5 Chips on capitals", JokerEffect.CHIPS_CAPITAL, 5, "✊"),
+    JokerDef("banner", "Banner", "+5 Chips flat", JokerEffect.CHIPS_FLAT, 5, "🏳"),
+    JokerDef("mystic", "Mystic Summit", "+0.3 Mult per 10% accuracy", JokerEffect.MULT_ACCURACY, 0.3, "☽"),
 ]
 
 MAX_JOKERS = 5
@@ -83,7 +89,7 @@ def apply_joker_effects(jokers: List[JokerDef], ctx: JokerContext) -> tuple[int,
                 bonus_chips += int(joker.value)
         elif effect == JokerEffect.CHIPS_PER_STREAK:
             if ctx.streak > 0:
-                bonus_chips += int(joker.value * min(ctx.streak, 20))
+                bonus_chips += int(joker.value * min(ctx.streak, _STREAKER_STREAK_CAP))
         elif effect == JokerEffect.MULT_ON_PERFECT_WORD:
             if ctx.word_just_completed and ctx.last_word_perfect:
                 bonus_chips += int(joker.value)
@@ -97,6 +103,9 @@ def apply_joker_effects(jokers: List[JokerDef], ctx: JokerContext) -> tuple[int,
             bonus_chips += int(joker.value)
         elif effect == JokerEffect.MULT_ACCURACY:
             bonus_mult += joker.value * (ctx.stats.accuracy // 10)
+
+    if bonus_chips > MAX_JOKER_CHIPS_PER_KEYSTROKE:
+        bonus_chips = MAX_JOKER_CHIPS_PER_KEYSTROKE
 
     return bonus_chips, bonus_mult
 

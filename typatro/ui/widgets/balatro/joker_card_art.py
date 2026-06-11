@@ -27,7 +27,7 @@ _MULT_EFFECTS = frozenset(
     }
 )
 
-FRAME_STYLE = Style(color=CARD_EDGE)
+FRAME_STYLE = Style(color=CARD_EDGE, bgcolor=CARD_BG)
 ICON_STYLE = Style(color=MULT_RED, bgcolor=CARD_BG, bold=True)
 NAME_STYLE = Style(color=CARD_TEXT, bgcolor=CARD_BG, bold=True)
 BODY_STYLE = Style(bgcolor=CARD_BG)
@@ -41,25 +41,41 @@ def effect_style(joker: JokerDef) -> Style:
     return MULT_STYLE if joker.effect in _MULT_EFFECTS else CHIPS_STYLE
 
 
+def _cell_len(text: str) -> int:
+    return Text(text).cell_len
+
+
 def _truncate(text: str, width: int) -> str:
+    """Truncate plain text to fit ``width`` terminal cells."""
     text = text.strip()
-    if len(text) <= width:
+    if _cell_len(text) <= width:
         return text
-    if width <= 1:
-        return text[:width]
-    return text[: width - 1] + "…"
+    truncated = Text(text)
+    truncated.truncate(width, overflow="ellipsis")
+    return truncated.plain
 
 
 def _framed_row(card: Text, inner: int, content: Text | None = None) -> None:
     card.append("▌", style=FRAME_STYLE)
-    length = len(content.plain) if content else 0
-    left = (inner - length) // 2
-    right = inner - length - left
+    content_cells = content.cell_len if content is not None else 0
+    left = (inner - content_cells) // 2
+    right = inner - content_cells - left
     card.append(" " * left, style=BODY_STYLE)
     if content is not None:
         card.append_text(content)
     card.append(" " * right, style=BODY_STYLE)
     card.append("▐\n", style=FRAME_STYLE)
+
+
+def _corner_pips(inner: int, icon: str) -> Text:
+    """Corner pip row sized in terminal cells (wide emoji-safe)."""
+    icon_cells = _cell_len(icon)
+    pips = Text()
+    pips.append(icon, style=PIP_STYLE)
+    pad = max(0, inner - 2 * icon_cells)
+    pips.append(" " * pad, style=BODY_STYLE)
+    pips.append(icon, style=PIP_STYLE)
+    return pips
 
 
 def render_joker_card(
@@ -74,20 +90,24 @@ def render_joker_card(
 
     card.append("▗" + "▄" * inner + "▖\n", style=FRAME_STYLE)
 
-    pips = Text()
-    pips.append(joker.icon, style=PIP_STYLE)
-    pips.append(" " * (inner - 2 * len(joker.icon)), style=BODY_STYLE)
-    pips.append(joker.icon, style=PIP_STYLE)
     card.append("▌", style=FRAME_STYLE)
-    card.append_text(pips)
+    card.append_text(_corner_pips(inner, joker.icon))
     card.append("▐\n", style=FRAME_STYLE)
 
     _framed_row(card, inner)
     _framed_row(card, inner, Text(_truncate(joker.icon, inner), style=ICON_STYLE))
     _framed_row(card, inner)
     _framed_row(card, inner, Text(_truncate(joker.name.upper(), inner), style=NAME_STYLE))
-    _framed_row(card, inner, Text("·" * min(inner - 4, 14), style=Style(color=CARD_EDGE, bgcolor=CARD_BG)))
-    _framed_row(card, inner, Text(_truncate(joker.description, inner), style=effect_style(joker)))
+    _framed_row(
+        card,
+        inner,
+        Text("·" * min(inner - 4, 14), style=Style(color=CARD_EDGE, bgcolor=CARD_BG)),
+    )
+    _framed_row(
+        card,
+        inner,
+        Text(_truncate(joker.description, inner), style=effect_style(joker)),
+    )
     if index_label:
         _framed_row(card, inner, Text(index_label, style=HINT_STYLE))
     _framed_row(card, inner)
@@ -99,11 +119,14 @@ def render_joker_card(
 def render_joker_line(joker: JokerDef, width: int) -> Text:
     """One-line joker stub for the sidebar: icon, name, effect."""
     line = Text()
-    line.append(f" {joker.icon} ", style=ICON_STYLE)
-    desc = _truncate(joker.description, max(6, width - len(joker.name) - 7))
-    name = _truncate(joker.name, width - len(desc) - 7)
+    icon_part = f" {joker.icon} "
+    line.append(icon_part, style=ICON_STYLE)
+    icon_cells = _cell_len(icon_part)
+    desc = _truncate(joker.description, max(6, width - _cell_len(joker.name) - icon_cells - 2))
+    name = _truncate(joker.name, width - _cell_len(desc) - icon_cells - 2)
     line.append(f"{name} ", style=NAME_STYLE)
-    pad = width - 4 - len(name) - len(desc) - 2
-    line.append(" " * max(0, pad), style=BODY_STYLE)
+    used = icon_cells + _cell_len(f"{name} ") + _cell_len(f"{desc} ")
+    pad = max(0, width - used)
+    line.append(" " * pad, style=BODY_STYLE)
     line.append(f"{desc} ", style=effect_style(joker))
     return line

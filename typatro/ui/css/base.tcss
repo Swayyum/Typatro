@@ -243,13 +243,13 @@ Star {
 
 /* ========== TYPATRO GAME PANELS ============ */
 GameSidebar {
-  background: $sub-alt-color 72%;
-  border-right: heavy $gold-color;
+  background: $sub-alt-color 78%;
+  border-right: heavy $main-color;
 }
 
 ScorePanel {
-  border: round $gold-color;
-  background: $bg-color 70%;
+  border: heavy $main-color;
+  background: $bg-color 82%;
 
   .--label {
     color: $sub-color;
@@ -275,11 +275,11 @@ ScorePanel {
 }
 
 BlindCard {
-  border: round $mult-color;
-  background: $bg-color 70%;
+  border: heavy $mult-color;
+  background: $bg-color 82%;
 
   &.pulse {
-    border: round $gold-color;
+    border: heavy $gold-color;
   }
 
   .--ante {
@@ -303,8 +303,8 @@ BlindCard {
 }
 
 JokerRow {
-  border: round $chips-color;
-  background: $bg-color 70%;
+  border: heavy $chips-color;
+  background: $bg-color 82%;
 
   .--label {
     color: $gold-color;
@@ -367,8 +367,8 @@ JokerChoiceScreen {
 }
 
 JokerChoicePanel {
-  border: heavy $gold-color;
-  background: $sub-alt-color 75%;
+  border: heavy $main-color;
+  background: $sub-alt-color;
   padding: 2 4;
 }
 
@@ -381,13 +381,18 @@ JokerChoicePanel {
   color: $sub-color;
 }
 
+JokerOption {
+  background: $card-bg;
+}
+
 JokerOption:hover {
-  background: $gold-color 30%;
+  background: $card-bg;
+  border: tall $gold-color;
 }
 
 /* ========== TYPATRO ANIMATED EFFECTS ============ */
 ScorePanel.rolling {
-  border: round $mult-color;
+  border: heavy $mult-color;
 }
 
 #blind-result.beaten {

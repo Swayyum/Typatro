@@ -264,6 +264,64 @@ async def test_main_and_joker_composite_shows_dither_and_ui():
         await pilot.pause()
 
 
+def test_render_joker_card_fixed_width_for_all_roster():
+    """Wide emoji icons must not overflow the card grid (causes border glitches)."""
+    from rich.text import Text
+
+    from typatro.src.jokers import JOKER_ROSTER
+    from typatro.ui.widgets.balatro.joker_card_art import render_joker_card
+
+    width = 24
+    for joker in JOKER_ROSTER:
+        card = render_joker_card(joker, width, index_label="[ 1 ]")
+        lines = card.plain.split("\n")
+        assert len(lines) == 11, joker.id
+        for line in lines:
+            assert Text(line).cell_len == width, f"{joker.id}: {line!r}"
+
+
+def test_render_joker_card_opaque_card_face():
+    from typatro.src.jokers import get_joker_by_id
+    from typatro.ui.widgets.balatro.joker_card_art import CARD_BG, render_joker_card
+
+    joker = get_joker_by_id("raised_fist")
+    assert joker is not None
+    card = render_joker_card(joker, 24, index_label="[ 1 ]")
+    assert card._spans, "card render must style every segment"
+    for _start, _end, style in card._spans:
+        assert style.bgcolor is not None
+        triplet = style.bgcolor.get_truecolor()
+        assert triplet.hex == CARD_BG
+
+
+@pytest.mark.asyncio
+async def test_joker_cards_no_dither_bleed():
+    """Card widgets must block the swirling backdrop inside their region."""
+    from typatro.src import config_parser
+    from typatro.src.dither import DITHER_CHARS
+    from typatro.ui.screens.joker_choice import JokerChoiceScreen, JokerOption
+    from typatro.ui.tui import Typatro
+
+    config_parser.set("game_mode", "run")
+    app = Typatro()
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        app.push_screen(JokerChoiceScreen())
+        await pilot.pause()
+        composite = app.screen._compositor.render_strips()
+        shaded_chars = {c for c in DITHER_CHARS if c != " "}
+        for option in app.screen.query(JokerOption):
+            region = option.region
+            for y in range(region.y, region.y + region.height):
+                line = _composite_plain([composite[y]])
+                slice_ = line[region.x : region.x + region.width]
+                assert not any(c in shaded_chars for c in slice_), (
+                    f"dither bleed in {option.joker.id} at y={y}"
+                )
+        app.screen.action_skip()
+        await pilot.pause()
+
+
 @pytest.mark.asyncio
 async def test_joker_choice_cards_layout_horizontally():
     from typatro.src import config_parser

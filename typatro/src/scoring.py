@@ -138,7 +138,8 @@ class ScoringEngine:
             )
             bonus_chips, bonus_mult = apply_joker_effects(self.jokers, ctx)
             self.state.chips += bonus_chips
-            self.state.bonus_mult += bonus_mult
+            # Flat/accuracy mult is a static joker bonus, not per-keystroke stack.
+            self.state.bonus_mult = bonus_mult
         else:
             self.state.streak = 0
 

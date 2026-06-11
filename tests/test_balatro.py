@@ -5,7 +5,15 @@ import pytest
 from typatro.src.scoring import ScoringEngine, ScoreState
 from typatro.src.stats_tracker import StatsTracker, CheckPoint, Match
 from typatro.src.tracker import Cursor
-from typatro.src.jokers import JokerDef, JokerEffect, apply_joker_effects, JokerContext, pick_random_jokers
+from typatro.src.jokers import (
+    JokerDef,
+    JokerEffect,
+    JOKER_ROSTER,
+    apply_joker_effects,
+    JokerContext,
+    get_joker_by_id,
+    pick_random_jokers,
+)
 from typatro.src.blind import get_blind_for_index, compute_target, SMALL_BLIND
 from typatro.src.run_state import RunState
 
@@ -83,15 +91,65 @@ def test_score_resets_streak_on_error():
 
 
 def test_joker_flat_mult():
-    joker = JokerDef("test", "Test", "+4 Mult", JokerEffect.FLAT_MULT, 4)
+    joker = JokerDef("test", "Test", "+2 Mult", JokerEffect.FLAT_MULT, 2)
     stats = StatsTracker()
     stats.start_time = 1.0
     ctx = JokerContext(stats=stats, streak=5, last_word_perfect=False,
                        last_word_length=0, last_char_was_capital=False,
                        word_just_completed=False)
     chips, mult = apply_joker_effects([joker], ctx)
-    assert mult == 4
+    assert mult == 2
     assert chips == 0
+
+
+def _simulate_typing(text: str, jokers=None) -> int:
+    """Type *text* correctly and return final score."""
+    engine = ScoringEngine(jokers=jokers)
+    stats = StatsTracker()
+    stats.start_time = 1.0
+    for i, letter in enumerate(text):
+        cp = CheckPoint(letter, i + 1, Match.MATCH)
+        cp.elapsed = 0.1 * (i + 1)
+        stats.checkpoints.append(cp)
+        engine.on_keystroke(Cursor(i, i + 1, True, letter), stats)
+    return engine.score
+
+
+# One common joker after ~40 keystrokes should not dominate the run.
+_SINGLE_JOKER_MAX_RATIO = 3.0
+_TYPING_SAMPLE = "the quick brown fox jumps over the lazy dog"
+
+
+@pytest.mark.parametrize(
+    "joker_id",
+    ["joker", "fibonacci", "odd_todd"],
+)
+def test_single_joker_score_stays_within_balance_cap(joker_id):
+    baseline = _simulate_typing(_TYPING_SAMPLE)
+    joker = get_joker_by_id(joker_id)
+    assert joker is not None
+    with_joker = _simulate_typing(_TYPING_SAMPLE, jokers=[joker])
+    assert baseline > 0
+    ratio = with_joker / baseline
+    assert ratio <= _SINGLE_JOKER_MAX_RATIO, (
+        f"{joker.name}: {with_joker} vs baseline {baseline} ({ratio:.1f}x)"
+    )
+
+
+def test_flat_mult_does_not_stack_per_keystroke():
+    """Flat mult is a static bonus, not cumulative per correct key."""
+    joker = get_joker_by_id("joker")
+    engine = ScoringEngine(jokers=[joker])
+    stats = StatsTracker()
+    stats.start_time = 1.0
+
+    for i in range(20):
+        cp = CheckPoint("a", i + 1, Match.MATCH)
+        cp.elapsed = 0.1 * (i + 1)
+        stats.checkpoints.append(cp)
+        engine.on_keystroke(Cursor(i, i + 1, True, "a"), stats)
+
+    assert engine.state.bonus_mult == joker.value
 
 
 def test_pick_random_jokers():

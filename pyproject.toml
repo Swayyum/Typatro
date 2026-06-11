@@ -24,6 +24,7 @@ dependencies = [
     "requests>=2.31.0",
     "platformdirs>=4.3.6",
     "pygame-ce>=2.5.0",
+    "Pillow>=10.0.0",
 ]
 
 [project.urls]
@@ -50,7 +51,7 @@ where = ["."]
 include = ["typatro*"]
 
 [tool.setuptools.package-data]
-typatro = ["ui/css/**/*.tcss", "assets/*.mp3"]
+typatro = ["ui/css/**/*.tcss", "assets/*.mp3", "assets/*.png"]
 
 [tool.ruff]
 exclude = ["venv"]
