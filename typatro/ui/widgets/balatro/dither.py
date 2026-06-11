@@ -26,7 +26,7 @@ class DitherBackground(Widget, can_focus=False):
 
     COMPONENT_CLASSES = {"--dither-dim", "--dither-mid", "--dither-bright"}
 
-    TICK_INTERVAL = 0.15
+    TICK_INTERVAL = 0.28
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)

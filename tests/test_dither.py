@@ -136,6 +136,43 @@ async def test_dither_background_mounts_on_main_screen():
 
 
 @pytest.mark.asyncio
+async def test_main_screen_dither_in_margins_not_chrome():
+    """Dither shows in typing margins; header and sidebar stay opaque for readability."""
+    from typatro.src import config_parser
+    from typatro.src.dither import DITHER_CHARS
+    from typatro.ui.tui import Typatro
+    from typatro.ui.screens.typing import GameSidebar, TypingArea
+    from typatro.ui.widgets.header import Header
+
+    config_parser.set("game_mode", "run")
+    app = Typatro()
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        header = app.screen.query_one(Header)
+        sidebar = app.screen.query_one(GameSidebar)
+        typing_area = app.screen.query_one(TypingArea)
+        composite = app.screen._compositor.render_strips()
+        shaded_chars = {c for c in DITHER_CHARS if c != " "}
+
+        def region_has_dither(widget) -> bool:
+            region = widget.region
+            for y in range(region.y, region.y + region.height):
+                if y < 0 or y >= len(composite):
+                    continue
+                line = _composite_plain([composite[y]])
+                slice_ = line[region.x : region.x + region.width]
+                if any(c in shaded_chars for c in slice_):
+                    return True
+            return False
+
+        assert header.styles.background.a > 0
+        assert sidebar.styles.background.a > 0
+        assert not region_has_dither(header)
+        assert not region_has_dither(sidebar)
+        assert region_has_dither(typing_area)
+
+
+@pytest.mark.asyncio
 async def test_main_screen_has_single_dither_not_in_sidebar():
     from typatro.src import config_parser
     from typatro.ui.tui import Typatro

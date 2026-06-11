@@ -17,7 +17,8 @@ from rich.text import Text
 DITHER_CHARS = (" ", "\u2591", "\u2592", "\u2593")  # ' ' ░ ▒ ▓
 
 #: Thresholds (over normalized 0..1 intensity) for each non-space bucket.
-_BUCKET_THRESHOLDS = (0.50, 0.70, 0.88)
+#: Higher cutoffs → sparser pattern (more empty cells), closer to Balatro's ambient swirl.
+_BUCKET_THRESHOLDS = (0.58, 0.78, 0.92)
 
 
 def swirl_intensity(x: int, y: int, width: int, height: int, phase: float) -> float:

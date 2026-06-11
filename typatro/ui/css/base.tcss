@@ -317,39 +317,58 @@ JokerRow {
   }
 }
 
+/* Run mode: full-screen dither on the backdrop layer only; chrome stays readable. */
 MainScreen.run-experience {
-  background: $bg-color 80%;
+  background: transparent;
+}
+
+MainScreen.run-experience GameSidebar {
+  background: $sub-alt-color 85%;
+}
+
+MainScreen.run-experience ScorePanel,
+MainScreen.run-experience BlindCard,
+MainScreen.run-experience JokerRow {
+  background: $bg-color;
+}
+
+MainScreen.run-experience TypingStripItem,
+MainScreen.run-experience SettingStripItem,
+MainScreen.run-experience ModeCount {
+  background: $sub-alt-color 65%;
 }
 
 MainScreen.run-experience ContentSwitcher,
 MainScreen.run-experience BaseWindow,
 MainScreen.run-experience TypingSpace,
 MainScreen.run-experience TypingArea,
-MainScreen.run-experience TypingScroll {
+MainScreen.run-experience TypingScroll,
+MainScreen.run-experience TypingConfigStrip,
+MainScreen.run-experience PaletteOptions {
   background: transparent;
 }
 
 DitherBackground {
   .--dither-dim {
-    color: $sub-color 70%;
+    color: $sub-color 40%;
   }
 
   .--dither-mid {
-    color: $gold-color 60%;
+    color: $gold-color 30%;
   }
 
   .--dither-bright {
-    color: $gold-color 90%;
+    color: $gold-color 50%;
   }
 }
 
 JokerChoiceScreen {
-  background: $bg-color 80%;
+  background: transparent;
 }
 
 JokerChoicePanel {
   border: heavy $gold-color;
-  background: $sub-alt-color;
+  background: $sub-alt-color 75%;
   padding: 2 4;
 }
 

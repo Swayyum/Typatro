@@ -1,5 +1,11 @@
 """Let the Balatro dither backdrop show through layout-only shells in run mode.
 
+Design: ``DitherBackground`` fills the screen on a backdrop layer, but header,
+sidebar, and game cards stay opaque/semi-opaque so nav and scores stay readable.
+Only typing-column layout shells (pads, scroll chrome, content switcher) skip
+painting so the swirl appears in margins and gaps — ambient background, not UI
+noise behind chrome.
+
 Textual compositors paint front-to-back; a widget that emits a full-width strip
 (even spaces + inherited background) blocks every cell in its region. Layout
 containers between ``ContentSwitcher`` and leaf widgets must emit empty strips
