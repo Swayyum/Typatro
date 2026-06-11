@@ -1,13 +1,13 @@
 MessageDialogue,
 PaletteHeader,
 BaseWindow {
-  background: $bg-color;
+  background: $bg-color 72%;
 }
 
 Tooltip,
 Header,
 PaletteInput {
-  background: $sub-alt-color;
+  background: $sub-alt-color 85%;
 }
 
 Tooltip,
@@ -121,7 +121,6 @@ PaletteList {
 
 Space {
   text-style: bold;
-  line-pad: 1;
 
   .--cursor-buddy {
     background: $main-color;
@@ -244,13 +243,13 @@ Star {
 
 /* ========== TYPATRO GAME PANELS ============ */
 GameSidebar {
-  background: $sub-alt-color;
+  background: $sub-alt-color 72%;
   border-right: heavy $gold-color;
 }
 
 ScorePanel {
   border: round $gold-color;
-  background: $bg-color;
+  background: $bg-color 70%;
 
   .--label {
     color: $sub-color;
@@ -277,7 +276,11 @@ ScorePanel {
 
 BlindCard {
   border: round $mult-color;
-  background: $bg-color;
+  background: $bg-color 70%;
+
+  &.pulse {
+    border: round $gold-color;
+  }
 
   .--ante {
     color: $sub-color;
@@ -301,26 +304,42 @@ BlindCard {
 
 JokerRow {
   border: round $chips-color;
-  background: $bg-color;
+  background: $bg-color 70%;
 
   .--label {
-    color: $sub-color;
-    text-style: bold;
-  }
-
-  .--joker-icon {
     color: $gold-color;
     text-style: bold;
   }
 
-  .--joker-name {
-    color: $text-color;
-    text-style: bold;
-  }
-
-  .--joker-desc {
+  .--muted {
     color: $sub-color;
     text-style: italic;
+  }
+}
+
+MainScreen.run-experience {
+  background: $bg-color 80%;
+}
+
+MainScreen.run-experience ContentSwitcher,
+MainScreen.run-experience BaseWindow,
+MainScreen.run-experience TypingSpace,
+MainScreen.run-experience TypingArea,
+MainScreen.run-experience TypingScroll {
+  background: transparent;
+}
+
+DitherBackground {
+  .--dither-dim {
+    color: $sub-color 70%;
+  }
+
+  .--dither-mid {
+    color: $gold-color 60%;
+  }
+
+  .--dither-bright {
+    color: $gold-color 90%;
   }
 }
 
@@ -329,27 +348,27 @@ JokerChoiceScreen {
 }
 
 JokerChoicePanel {
-  border: round $gold-color;
+  border: heavy $gold-color;
   background: $sub-alt-color;
+  padding: 2 4;
 }
 
 #joker-title {
   color: $gold-color;
+  text-style: bold;
 }
 
 #joker-subtitle {
   color: $sub-color;
 }
 
-JokerOption {
-  border: heavy $gold-color;
-  background: $sub-alt-color;
-  color: $text-color;
+JokerOption:hover {
+  background: $gold-color 30%;
 }
 
-JokerOption:hover {
-  background: $main-color;
-  color: $bg-color;
+/* ========== TYPATRO ANIMATED EFFECTS ============ */
+ScorePanel.rolling {
+  border: round $mult-color;
 }
 
 #blind-result.beaten {

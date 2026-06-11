@@ -41,11 +41,24 @@ class BlindDef:
 # Base targets scale with word count / duration
 BASE_TARGET = 300
 
+# Exponential per-ante growth, expressed as an exact ratio (8/5 = 1.6x per
+# ante) so targets stay precise integers at arbitrarily high antes — Balatro
+# requirements grow roughly exponentially and can reach 1e308+.
+ANTE_GROWTH_NUM = 8
+ANTE_GROWTH_DEN = 5
 
-def compute_target(blind: BlindDef, word_count: int) -> int:
-    """Compute score target based on blind type and test length."""
-    scale = word_count / 30
-    return int(BASE_TARGET * blind.target_multiplier * scale)
+
+def ante_scale_target(target: int, ante: int) -> int:
+    """Scale a base target exponentially by ante using exact integer math."""
+    steps = max(0, ante - 1)
+    return target * ANTE_GROWTH_NUM**steps // ANTE_GROWTH_DEN**steps
+
+
+def compute_target(blind: BlindDef, word_count: int, ante: int = 1) -> int:
+    """Compute score target based on blind type, test length, and ante."""
+    # Keep the multiplier in integer space (multipliers are defined to 1dp)
+    base = BASE_TARGET * int(blind.target_multiplier * 10) * word_count // (30 * 10)
+    return ante_scale_target(base, ante)
 
 
 SMALL_BLIND = BlindDef(BlindType.SMALL, "Small Blind", 1.0, "+1 Joker pick")

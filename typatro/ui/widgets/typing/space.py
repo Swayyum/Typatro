@@ -178,8 +178,8 @@ class Space(Static):
         self.reset_newlines()
 
     def _wrap_width(self) -> int:
-        """Paragraph wrap width, accounting for Space line-pad in CSS."""
-        return max(1, self.size.width - self.styles.line_pad * 2)
+        """Paragraph wrap width in terminal cells."""
+        return max(1, self.size.width)
 
     def reset_newlines(self) -> None:
         self.newlines = master_generator.get_newlines(
@@ -259,9 +259,11 @@ class Space(Static):
 
     def _update_run_visibility(self) -> None:
         try:
+            from typatro.src.balatro_experience import sync_balatro_experience
             from typatro.ui.screens.typing import TypingSpace
 
             self.screen.query_one(TypingSpace).update_run_visibility()
+            sync_balatro_experience(self.app)
         except Exception:
             pass
 

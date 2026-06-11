@@ -5,6 +5,7 @@ from textual.app import ComposeResult
 from textual.widget import Widget
 
 from typatro.ui.widgets.settings.danger_options import ResetConfig, ResetRun
+from typatro.src.background_music import apply_music_settings
 from .option import Confirm, Option, NumberScroll
 
 Options = Union[Option, NumberScroll, Confirm]
@@ -248,39 +249,29 @@ menu = {
             info="Reset your Balatro run (ante, blinds, jokers)",
         ),
     ],
-    # "sound": [
-    #     Setting(
-    #         "Language",
-    #         {},
-    #         Option("language", options=["english", "french"]),
-    #         "Choose the language you want the words to be generated from !",
-    #     ),
-    #     Setting(
-    #         "Keypress Sound",
-    #         {
-    #             "off": "Already have good switches? There will be no sound on keypress",
-    #             "on": "Pressing a key will trigger a click sound except backspace",
-    #             "backspace": "Pressing key, including backspace, will trigger click sound",
-    #         },
-    #         Option(
-    #             "keypress_sound",
-    #             options=["off", "on", "backspace"],
-    #         ),
-    #         "Sounds good?",
-    #     ),
-    #     Setting(
-    #         "Click sound",
-    #         {
-    #             "cream": "Smooth soothing sound to the ears :)",
-    #             "lubed": "Just the right amount",
-    #             "mech": "Mechanical feel baby!",
-    #             "heavy": "Wanna feel like you are on a typewriter?",
-    #         },
-    #         Option(
-    #             "sound",
-    #             options=["cream", "lubed", "mech", "heavy"],
-    #         ),
-    #         "Choose whats most pleasing to you ears :)",
-    #     ),
-    # ],
+    "sound": [
+        Setting(
+            "󰝚 Background Music",
+            {
+                "off": "Play looping background music in run mode",
+                "on": "Mute looping background music in run mode",
+            },
+            Option(
+                "music_muted",
+                options=["off", "on"],
+                callback=apply_music_settings,
+            ),
+            "Background music plays only in [bold]run[/bold] mode (Balatro experience)."
+            + "\n"
+            + "Classic mode stays silent regardless of this setting.",
+        ),
+        Setting(
+            "󰕾 Music Volume",
+            {},
+            NumberScroll("music_volume", callback=apply_music_settings),
+            info="Volume for background music (0–100)."
+            + "\n"
+            + "Applies immediately in run mode; stored for when you switch back from classic.",
+        ),
+    ],
 }

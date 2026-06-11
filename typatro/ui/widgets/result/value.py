@@ -5,7 +5,7 @@ from textual.widget import Widget
 from textual.widgets import Digits, Static
 
 from typatro.src.parser import data_parser
-from typatro.src.scoring import ScoreState
+from typatro.src.scoring import ScoreState, format_number
 from typatro.src import config_parser
 from typatro.src.slot_machine import DigitSpin
 
@@ -132,7 +132,9 @@ class ValueContainer(Static):
         score_container = self.query_one("#score_container", AutoVertical)
         if config_parser.get("game_mode") == "run" and score_state:
             score_container.display = True
-            self.score.update(str(score_state.score))
+            # Plain digits below the sci-notation threshold preserve the
+            # digit-spin reveal; huge scores fall back to "1.234e13" style.
+            self.score.update(format_number(score_state.score, sep=""))
         else:
             score_container.display = False
 

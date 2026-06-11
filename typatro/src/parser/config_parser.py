@@ -26,6 +26,8 @@ DEFAULTS = {
     "writing mode": "words",
     "theme": "balatro",
     "game_mode": "run",
+    "music_muted": False,
+    "music_volume": 100,
 }
 
 
@@ -80,6 +82,13 @@ class ConfigParser(Parser):
         mode = self.get("mode")
         mode = "words" if mode == "time" else "time"
         self.set("mode", mode)
+
+    def toggle_music_muted(self) -> None:
+        muted = self.get("music_muted")
+        if isinstance(muted, bool):
+            self.set("music_muted", not muted)
+        else:
+            self.set("music_muted", "off" if muted == "on" else "on")
 
     @property
     def theme(self) -> str:

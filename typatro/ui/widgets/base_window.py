@@ -2,9 +2,10 @@ from typing import Optional
 from textual.app import events
 from textual.widget import Widget
 from typatro.ui.events import SetScreen
+from typatro.ui.widgets.dither_passthrough import DitherPassthrough
 
 
-class BaseWindow(Widget):
+class BaseWindow(DitherPassthrough, Widget):
     """
     Base Window widget for content switcher
     """

@@ -5,10 +5,11 @@ from rich.text import Text
 from textual.widget import Widget
 
 from typatro.src.jokers import MAX_JOKERS, JokerDef
+from typatro.ui.widgets.balatro.joker_card_art import render_joker_line
 
 
 class JokerRow(Widget):
-    """Vertical list of held jokers, card-stub style."""
+    """Compact list of held jokers, one card stub per line."""
 
     DEFAULT_CSS = """
     JokerRow {
@@ -18,7 +19,9 @@ class JokerRow(Widget):
     }
     """
 
-    COMPONENT_CLASSES = {"--joker-icon", "--joker-name", "--joker-desc", "--label"}
+    COMPONENT_CLASSES = {"--label", "--muted"}
+
+    LINE_WIDTH = 28
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -33,21 +36,19 @@ class JokerRow(Widget):
         self.refresh()
 
     def render(self) -> RenderableType:
-        icon_style = self.get_component_rich_style("--joker-icon")
-        name_style = self.get_component_rich_style("--joker-name")
-        desc_style = self.get_component_rich_style("--joker-desc")
         label_style = self.get_component_rich_style("--label")
+        muted_style = self.get_component_rich_style("--muted")
 
         text = Text()
         text.append(f"JOKERS {len(self._jokers)}/{MAX_JOKERS}\n", style=label_style)
 
         if not self._jokers:
-            text.append("  (beat a blind to earn one)", style=desc_style)
+            text.append(" beat a blind to earn one", style=muted_style)
             return text
 
-        for joker in self._jokers:
-            text.append(f" {joker.icon} ", style=icon_style)
-            text.append(f"{joker.name}\n", style=name_style)
-            text.append(f"    {joker.description}\n", style=desc_style)
+        for index, joker in enumerate(self._jokers):
+            if index:
+                text.append("\n")
+            text.append_text(render_joker_line(joker, self.LINE_WIDTH))
 
         return text

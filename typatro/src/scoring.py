@@ -9,6 +9,29 @@ from typatro.src.jokers import JokerContext, JokerDef, apply_joker_effects
 from typatro.src.stats_tracker import Match, StatsTracker
 from typatro.src.tracker import Cursor
 
+# Above this, scores render in Balatro-style scientific notation (e.g. 1.234e13)
+SCI_NOTATION_THRESHOLD = 10**11
+
+# Mult is tracked to 2 decimal places; scores use exact integer math so huge
+# chip counts never lose precision to float rounding.
+_MULT_PRECISION = 100
+
+
+def format_number(value: int, sep: str = ",") -> str:
+    """Format a score/target Balatro-style.
+
+    Comma-grouped below SCI_NOTATION_THRESHOLD, scientific notation above
+    (e.g. "1.234e13"). String-based so arbitrarily large ints keep precision.
+    """
+    n = int(value)
+    if abs(n) < SCI_NOTATION_THRESHOLD:
+        return f"{n:,}".replace(",", sep) if sep else str(n)
+    digits = str(abs(n))
+    exponent = len(digits) - 1
+    mantissa = digits[0] + "." + digits[1:4].ljust(3, "0")
+    sign = "-" if n < 0 else ""
+    return f"{sign}{mantissa}e{exponent}"
+
 
 @dataclass
 class ScoreState:
@@ -24,7 +47,10 @@ class ScoreState:
 
     @property
     def score(self) -> int:
-        return int(self.chips * self.mult)
+        # Integer math: chips can grow unbounded, and float multiplication
+        # would silently lose precision past 2**53.
+        scaled_mult = int(round(self.mult * _MULT_PRECISION))
+        return (self.chips * scaled_mult) // _MULT_PRECISION
 
 
 class ScoringEngine:
@@ -84,6 +110,8 @@ class ScoringEngine:
         last_word_perfect = self._last_word_perfect(stats) if word_completed else False
         last_word_length = self._last_word_length(stats) if word_completed else 0
 
+        streak_mult = 1.0
+
         if cursor.correct:
             self.state.chips += self.CHIPS_PER_CHAR
             self.state.streak += 1
@@ -98,7 +126,7 @@ class ScoringEngine:
                 streak_bonus = (
                     self.state.streak // self.STREAK_MULT_THRESHOLD
                 ) * self.STREAK_MULT_BONUS
-                self.state.base_mult = 1.0 + streak_bonus
+                streak_mult = 1.0 + streak_bonus
 
             ctx = JokerContext(
                 stats=stats,
@@ -113,11 +141,10 @@ class ScoringEngine:
             self.state.bonus_mult += bonus_mult
         else:
             self.state.streak = 0
-            self.state.base_mult = 1.0
 
-        # Accuracy scales mult continuously
+        # Accuracy stacks with streak mult instead of replacing it.
         acc_bonus = stats.accuracy * self.ACCURACY_MULT_FACTOR
-        self.state.base_mult = max(1.0, 1.0 + acc_bonus * 0.1)
+        self.state.base_mult = max(1.0, streak_mult + acc_bonus * 0.1)
 
         return self.state
 

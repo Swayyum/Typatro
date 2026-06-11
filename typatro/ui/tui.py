@@ -3,6 +3,7 @@ from textual import on
 from textual.app import App, ComposeResult, events
 from textual.screen import Screen
 from textual.widgets import ContentSwitcher
+from typatro.ui.widgets.dither_passthrough import DitherPassthrough
 from typatro.ui.events import SetScreen, ShowResults
 from typatro.ui.widgets import *  # noqa
 from typatro.ui.screens import *  # noqa
@@ -13,6 +14,13 @@ from typatro.ui.widgets import Space, Ticker
 from typatro.ui.screens.confirm import ConfirmScreen
 from typatro.ui.screens.joker_choice import JokerChoiceScreen
 from typatro.src.jokers import JokerDef
+from typatro.src.background_music import stop_background_music
+from typatro.src.balatro_experience import sync_balatro_experience
+from typatro.ui.widgets.balatro import DitherBackground
+
+
+class PassthroughContentSwitcher(DitherPassthrough, ContentSwitcher):
+    """ContentSwitcher that does not paint over the dither backdrop in run mode."""
 
 
 class MainScreen(Screen):
@@ -22,9 +30,24 @@ class MainScreen(Screen):
 
     DEFAULT_CSS = """
     MainScreen {
-        layout: grid;
-        grid-size: 1 2;
-        grid-rows: 5 1fr;
+        layers: backdrop content;
+    }
+
+    MainScreen > DitherBackground {
+        layer: backdrop;
+        width: 100%;
+        height: 100%;
+    }
+
+    MainScreen > Header {
+        layer: content;
+        dock: top;
+        height: 5;
+    }
+
+    MainScreen > ContentSwitcher {
+        layer: content;
+        background: transparent;
     }
     """
 
@@ -33,14 +56,14 @@ class MainScreen(Screen):
         self._pending_joker_pick = False
 
     def compose(self) -> ComposeResult:
+        yield DitherBackground()
         yield Header()
-        yield ContentSwitcher(
+        yield PassthroughContentSwitcher(
             TypingScreen(id="typing"),
             AboutScreen(id="about"),
             SettingsScreen(id="settings"),
             HelpScreen(id="help"),
             ResultScreen(id="result"),
-            # initial screen
             initial="typing",
         )
 
@@ -135,6 +158,10 @@ class Typatro(App):
     async def on_mount(self) -> None:
         self.push_screen("main")
         run_manager.set_active_app(self)
+        sync_balatro_experience(self)
+
+    def on_unmount(self) -> None:
+        stop_background_music()
 
     @on(ApplyLanguage)
     def apply_language(self, event: ApplyLanguage) -> None:

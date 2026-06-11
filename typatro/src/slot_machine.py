@@ -255,31 +255,32 @@ class Odometer:
     like Balatro's score tally.
     """
 
-    value: float = 0.0
-    target: float = 0.0
+    value: int = 0
+    target: int = 0
 
-    def set_target(self, target: float) -> None:
-        self.target = target
+    def set_target(self, target: int) -> None:
+        self.target = int(target)
 
     def snap(self) -> None:
         self.value = self.target
 
     @property
     def done(self) -> bool:
-        return abs(self.target - self.value) < 0.5
+        return self.value == self.target
 
     def tick(self) -> int:
-        """Advance toward the target; returns the current display value."""
+        """Advance toward the target; returns the current display value.
+
+        Pure integer math so arbitrarily large scores never lose precision,
+        with proportional steps (25% of the remaining gap) so huge targets
+        converge in O(log(gap)) ticks rather than linearly.
+        """
         gap = self.target - self.value
-        if abs(gap) >= 0.5:
-            # Ease toward target: 25% of remaining gap, minimum 1 unit
-            step = max(1.0, abs(gap) * 0.25)
+        if gap != 0:
+            step = max(1, abs(gap) // 4)
             self.value += step if gap > 0 else -step
 
-        if abs(self.target - self.value) < 0.5:
-            self.value = self.target
-
-        return int(self.value)
+        return self.value
 
 
 @dataclass

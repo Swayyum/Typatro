@@ -31,10 +31,36 @@ async def test_typing_updates_score():
         space = app.screen.query_one(Space)
         first_char = space.paragraph.plain[0]
         space.keypress(first_char)
-        await pilot.pause()
 
         panel = app.screen.query_one(ScorePanel)
         assert panel._chips >= 1
+        assert panel._mult >= 1.0
+        assert panel._display_score >= 1
+        assert space.scoring.score >= 1
+
+
+@pytest.mark.asyncio
+async def test_typing_increases_score_over_multiple_keystrokes():
+    config_parser.set("game_mode", "run")
+    app = Typatro()
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        from typatro.ui.widgets import Space
+        from typatro.ui.widgets.balatro import ScorePanel
+
+        space = app.screen.query_one(Space)
+        panel = app.screen.query_one(ScorePanel)
+
+        for _ in range(12):
+            pos = space.tracker.cursor_pos
+            if pos >= len(space.paragraph.plain):
+                break
+            space.keypress(space.paragraph.plain[pos])
+
+        assert panel._chips >= 12
+        assert panel._display_score >= 1
+        assert panel._mult > 1.0
+        assert space.scoring.score >= panel._display_score
 
 
 @pytest.mark.asyncio

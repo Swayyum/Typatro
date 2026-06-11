@@ -40,9 +40,9 @@ class RunState:
     def target_score(self) -> int:
         word_count = self._word_count()
         blind = self.current_blind
-        target = compute_target(blind, word_count)
+        target = compute_target(blind, word_count, self.ante)
         if blind.boss and blind.boss == BossBlind.THE_WALL:
-            target = int(target * 1.3)
+            target = target * 13 // 10
         return target
 
     def _word_count(self) -> int:

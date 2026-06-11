@@ -32,7 +32,13 @@ def main(ctx, version: bool, classic: bool) -> None:
         else:
             config_parser.set("game_mode", "run")
 
-        Typatro().run()
+        from typatro.src.background_music import stop_background_music
+
+        app = Typatro()
+        try:
+            app.run()
+        finally:
+            stop_background_music()
 
 
 @main.command(help="Add a language to typatro")

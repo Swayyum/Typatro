@@ -53,20 +53,18 @@ class Header(Widget):
         self.refresh(layout=True)
 
     def enable_tall_mode(self) -> None:
-        height = self.size.height
-        if height == 5:
+        if self.styles.height == 5:
             return
 
-        self.screen.styles.grid_rows = "5 1fr"
+        self.styles.height = 5
         self.query_one(Banner).is_tall = True
         self.query_one("Header > Horizontal").styles.height = "5"
 
     def disable_tall_mode(self) -> None:
-        height = self.size.height
-        if height != 5:
+        if self.styles.height == 3:
             return
 
-        self.screen.styles.grid_rows = "3 1fr"
+        self.styles.height = 3
         self.query_one(Banner).is_tall = False
         self.query_one("Header > Horizontal").styles.height = "3"
 

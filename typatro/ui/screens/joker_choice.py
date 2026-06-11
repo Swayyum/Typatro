@@ -10,6 +10,16 @@ from textual.widgets import Static
 
 from typatro.src.jokers import JokerDef, pick_random_jokers
 from typatro.ui.events import JokerSelected
+from typatro.ui.widgets.balatro.dither import DitherBackground
+from typatro.ui.widgets.balatro.joker_card_art import render_joker_card
+
+
+class JokerOptionsRow(Horizontal):
+    """Horizontal row of joker cards — must not shrink or cards stack vertically."""
+
+    def __init__(self, **kwargs) -> None:
+        super().__init__(**kwargs)
+        self.shrink = False
 
 
 class JokerOption(Widget):
@@ -17,14 +27,17 @@ class JokerOption(Widget):
 
     DEFAULT_CSS = """
     JokerOption {
-        width: 26;
-        height: auto;
-        padding: 1 2;
+        width: 24;
+        height: 11;
+        min-width: 24;
+        min-height: 11;
         margin: 0 1;
         content-align: center middle;
-        text-align: center;
     }
     """
+
+    CARD_WIDTH = 24
+    CARD_HEIGHT = 11
 
     def __init__(self, joker: JokerDef, index: int, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -35,11 +48,11 @@ class JokerOption(Widget):
         self.post_message(JokerSelected(self.joker))
 
     def render(self) -> RenderableType:
-        text = Text()
-        text.append(f"  {self.joker.icon}  \n", style="bold #eac058")
-        text.append(f"{self.joker.name}\n", style="bold")
-        text.append(f"{self.joker.description}", style="italic")
-        return text
+        return render_joker_card(
+            self.joker,
+            self.CARD_WIDTH,
+            index_label=f"[ {self.index + 1} ]",
+        )
 
 
 class JokerChoicePanel(Widget):
@@ -77,8 +90,10 @@ class JokerChoicePanel(Widget):
     #joker-options {
         width: auto;
         height: auto;
+        min-width: 80;
         layout: horizontal;
         align: center middle;
+        content-align: center middle;
     }
     """
 
@@ -89,10 +104,24 @@ class JokerChoiceScreen(Screen):
     DEFAULT_CSS = """
     JokerChoiceScreen {
         align: center middle;
+        layers: backdrop panel;
+    }
+
+    JokerChoiceScreen > DitherBackground {
+        layer: backdrop;
+        width: 100%;
+        height: 100%;
+    }
+
+    JokerChoiceScreen > JokerChoicePanel {
+        layer: panel;
     }
     """
 
     BINDINGS = [
+        ("1", "pick_one", "Pick 1"),
+        ("2", "pick_two", "Pick 2"),
+        ("3", "pick_three", "Pick 3"),
         ("escape", "skip", "Skip"),
     ]
 
@@ -102,13 +131,30 @@ class JokerChoiceScreen(Screen):
         self._choices = pick_random_jokers(3, self.exclude_ids)
 
     def compose(self) -> ComposeResult:
+        yield DitherBackground()
         with JokerChoicePanel():
             with Vertical():
                 yield Static("Choose a Joker", id="joker-title")
-                yield Static("Pick one to add to your run", id="joker-subtitle")
-                with Horizontal(id="joker-options"):
+                yield Static(
+                    "Pick one · press 1–3 · click · Esc to skip",
+                    id="joker-subtitle",
+                )
+                with JokerOptionsRow(id="joker-options"):
                     for i, joker in enumerate(self._choices):
                         yield JokerOption(joker, i)
+
+    def _pick(self, index: int) -> None:
+        if 0 <= index < len(self._choices):
+            self.dismiss(self._choices[index])
+
+    def action_pick_one(self) -> None:
+        self._pick(0)
+
+    def action_pick_two(self) -> None:
+        self._pick(1)
+
+    def action_pick_three(self) -> None:
+        self._pick(2)
 
     def action_skip(self) -> None:
         self.dismiss(None)

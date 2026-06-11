@@ -8,6 +8,7 @@ from typatro.ui.widgets import (
     Space,
     Ticker,
 )
+from typatro.ui.widgets.dither_passthrough import DitherPassthrough
 from typatro.ui.widgets.balatro import ScorePanel, BlindCard, JokerRow
 from textual.containers import VerticalScroll
 from typatro.ui.events import SetScreen
@@ -18,7 +19,7 @@ class TypingScroll(VerticalScroll, can_focus=False):
     pass
 
 
-class Pad(Widget):
+class Pad(DitherPassthrough, Widget):
     """
     Pad widget for empty spaces
     """
@@ -63,18 +64,23 @@ class GameSidebar(Widget):
         yield JokerRow()
 
 
-class TypingArea(Widget):
+class TypingArea(DitherPassthrough, Widget):
     """Main typing column: config strip, ticker, paragraph."""
 
     DEFAULT_CSS = """
     TypingArea {
         layout: grid;
         grid-size: 3 6;
-        grid-columns: 1fr 4fr 1fr;
-        grid-rows: 1 1fr 1 3 1fr 1;
+        grid-columns: 2fr 4fr 2fr;
+        grid-rows: 1 1fr 1 6 1fr 1;
         height: 100%;
         width: 1fr;
-        margin: 1;
+        margin: 0 1;
+    }
+
+    TypingArea > Ticker {
+        text-style: bold;
+        content-align: center middle;
     }
 
     VerticalScroll {
@@ -96,7 +102,7 @@ class TypingArea(Widget):
         yield PaletteOptions()
 
 
-class TypingSpace(Widget):
+class TypingSpace(DitherPassthrough, Widget):
     """
     Widget that holds the game sidebar and the typing area
     """
