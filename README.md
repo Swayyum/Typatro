@@ -18,15 +18,19 @@ A slot-machine typing roguelike for your terminal. Type fast, build **Chips x Mu
 pip install typatro
 ```
 
-For local development (recommended — use a virtual environment):
+For local development (recommended):
 
 ```bash
 cd Typatro
-python3 -m venv .venv
+uv sync
 source .venv/bin/activate
-pip install --upgrade pip
-pip install -e .
-typatro
+typatro          # or: python -m typatro
+```
+
+If `typatro` fails with `No module named 'typatro'`, recreate the venv:
+
+```bash
+rm -rf .venv && uv sync && source .venv/bin/activate
 ```
 
 Requires Python 3.9+. Homebrew Python blocks global `pip install`; a venv avoids that and keeps `typatro` on your PATH while activated. A [Nerd Font](https://www.nerdfonts.com/) improves the icons but isn't required.
@@ -64,10 +68,31 @@ Click **Run/Classic** in the strip above the typing area to switch modes.
 ## Development
 
 ```bash
-pip install -e .
-python -m pytest tests/
+uv sync --all-groups
+uv run python -m pytest tests/
 ```
+
+## Release (TestPyPI)
+
+Build and upload a test release:
+
+```bash
+uv sync --all-groups
+uv run python -m build
+uv run twine upload --repository testpypi dist/*
+```
+
+Install from TestPyPI:
+
+```bash
+python3 -m venv /tmp/typatro-test
+source /tmp/typatro-test/bin/activate
+python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ typatro
+typatro --help
+```
+
+Use `--extra-index-url https://pypi.org/simple/` so dependencies resolve from the main PyPI index.
 
 ## Credits & license
 
-GPL-3.0. TYPATRO by [Swayyum](https://github.com/Swayyum) — a slot-machine typing roguelike built on a Textual TUI typing engine.
+GPL-3.0. TYPATRO by [Swayyum](https://github.com/Swayyum).

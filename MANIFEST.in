@@ -1,0 +1,7 @@
+include README.md
+include LICENSE
+include CHANGELOG.md
+recursive-include typatro/ui/css *.tcss
+recursive-include typatro/assets *.mp3
+recursive-include typatro/assets/jokers *.jpeg
+recursive-include typatro/assets/jokers *.art.json

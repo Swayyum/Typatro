@@ -1,7 +1,6 @@
-"""POI Studio–inspired grainy dither field for Bathyn / Veridia themes.
+"""Procedural grainy dither field for select themes.
 
-Organic color zones (teal waves, magenta hills, cream highlights) with heavy
-stochastic grain, approximating POI Studio brand art. Pure logic — no widget
+Organic color zones with heavy stochastic grain. Pure logic — no widget
 dependencies — so it stays unit-testable.
 """
 
@@ -15,7 +14,7 @@ from rich.text import Text
 from typatro.src.dither import DITHER_CHARS
 
 #: Themes that use the POI grain algorithm and zone-colored dither.
-POI_THEMES = frozenset({"bathyn", "veridia"})
+POI_THEMES = frozenset()
 
 #: Landscape zone indices returned by ``poi_zone``.
 ZONE_SHADOW = 0

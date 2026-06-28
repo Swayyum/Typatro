@@ -10,6 +10,15 @@ from typatro.src.dither import (
 )
 
 
+@pytest.fixture(autouse=True)
+def use_balatro_theme_for_dither_tests():
+    """Dither integration tests assume a theme with an animated backdrop."""
+    from typatro.src import config_parser
+
+    config_parser.set("theme", "balatro")
+    yield
+
+
 def test_swirl_intensity_in_unit_range():
     for phase in (0.0, 1.7, 42.0):
         for y in range(10):
@@ -173,6 +182,69 @@ async def test_main_screen_dither_in_margins_not_chrome():
 
 
 @pytest.mark.asyncio
+async def test_header_banner_has_visible_width():
+    """Logo column must not collapse to zero width in the header grid."""
+    from typatro.ui.tui import Typatro
+    from typatro.ui.widgets.header import HeaderBrandColumn
+    from typatro.ui.widgets.label import Banner
+    from typatro.ui.sidebar_layout import SIDEBAR_INNER_WIDTH, SIDEBAR_WIDTH
+
+    app = Typatro()
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        brand = app.screen.query_one(HeaderBrandColumn)
+        banner = app.screen.query_one(Banner)
+        assert brand.region.width >= SIDEBAR_WIDTH
+        assert banner.region.width >= SIDEBAR_INNER_WIDTH
+        assert banner.render().plain.strip() != ""
+
+
+@pytest.mark.asyncio
+async def test_header_logo_renders_three_lines():
+    """Tall header logo shows top bar, centered text, and bottom bar."""
+    from typatro.ui.tui import Typatro
+    from typatro.ui.widgets.label import Banner
+
+    app = Typatro()
+    async with app.run_test(size=(120, 40)) as pilot:
+        await pilot.pause()
+        banner = app.screen.query_one(Banner)
+        assert banner.is_tall
+        assert banner.region.height <= app.screen.query_one("Header").region.height
+
+        for _ in range(200):
+            banner._engine.tick()
+            if banner._engine.done:
+                break
+
+        lines = banner.render().plain.split("\n")
+        assert len(lines) == 3
+        assert all(line.strip() for line in lines)
+        assert "T Y P A T R O" in lines[1]
+
+
+def test_logo_marquee_width_matches_brand():
+    """Marquee bars span the brand column; logo line is centered in that width."""
+    from typatro.src.slot_machine import LogoReelEngine
+
+    engine = LogoReelEngine(target="typatro")
+    for _ in range(200):
+        engine.tick()
+        if engine.done:
+            break
+
+    bar_width = 32
+    core_width = engine.logo_width()
+    lines = engine.render_logo(0, marquee=True, bar_width=bar_width).plain.split("\n")
+
+    assert len(lines) == 3
+    assert len(lines[0]) == bar_width
+    assert len(lines[2]) == bar_width
+    assert lines[1].startswith(" " * ((bar_width - core_width) // 2))
+    assert lines[1].rstrip().endswith("🎰")
+
+
+@pytest.mark.asyncio
 async def test_main_screen_has_single_dither_not_in_sidebar():
     from typatro.src import config_parser
     from typatro.ui.tui import Typatro
@@ -264,29 +336,42 @@ async def test_main_and_joker_composite_shows_dither_and_ui():
         await pilot.pause()
 
 
+def _card_plain(card) -> str:
+    from rich.console import Console
+
+    console = Console(
+        width=120,
+        force_terminal=True,
+        color_system="truecolor",
+        record=True,
+    )
+    console.print(card)
+    return console.export_text(clear=False).rstrip("\n")
+
+
 def test_render_joker_card_fixed_width_for_all_roster():
     """Wide emoji icons must not overflow the card grid (causes border glitches)."""
     from rich.text import Text
 
     from typatro.src.jokers import JOKER_ROSTER
-    from typatro.ui.widgets.balatro.joker_card_art import render_joker_card
+    from typatro.ui.widgets.balatro.joker_card_art import CARD_HEIGHT, CARD_WIDTH, render_joker_card
 
-    width = 24
+    width = CARD_WIDTH
     for joker in JOKER_ROSTER:
         card = render_joker_card(joker, width, index_label="[ 1 ]")
-        lines = card.plain.split("\n")
-        assert len(lines) == 11, joker.id
+        lines = _card_plain(card).split("\n")
+        assert len(lines) == CARD_HEIGHT, joker.id
         for line in lines:
             assert Text(line).cell_len == width, f"{joker.id}: {line!r}"
 
 
 def test_render_joker_card_opaque_card_face():
     from typatro.src.jokers import get_joker_by_id
-    from typatro.ui.widgets.balatro.joker_card_art import CARD_BG, render_joker_card
+    from typatro.ui.widgets.balatro.joker_card_art import CARD_BG, CARD_WIDTH, render_joker_card
 
     joker = get_joker_by_id("raised_fist")
     assert joker is not None
-    card = render_joker_card(joker, 24, index_label="[ 1 ]")
+    card = render_joker_card(joker, CARD_WIDTH, index_label="[ 1 ]")
     assert card._spans, "card render must style every segment"
     for _start, _end, style in card._spans:
         assert style.bgcolor is not None
@@ -302,11 +387,13 @@ async def test_joker_cards_no_dither_bleed():
     from typatro.ui.screens.joker_choice import JokerChoiceScreen, JokerOption
     from typatro.ui.tui import Typatro
 
+    from typatro.src.joker_image import JOKER_IMAGE_FILES
+
     config_parser.set("game_mode", "run")
     app = Typatro()
     async with app.run_test(size=(120, 40)) as pilot:
         await pilot.pause()
-        app.push_screen(JokerChoiceScreen())
+        app.push_screen(JokerChoiceScreen(exclude_ids=list(JOKER_IMAGE_FILES.keys())))
         await pilot.pause()
         composite = app.screen._compositor.render_strips()
         shaded_chars = {c for c in DITHER_CHARS if c != " "}

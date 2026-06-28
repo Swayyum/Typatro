@@ -2,8 +2,8 @@ import os
 from textual.app import ComposeResult
 from textual.containers import Horizontal
 from textual.widget import Widget
-from textual.widgets import Static
 
+from typatro.ui.sidebar_layout import SIDEBAR_INNER_WIDTH, SIDEBAR_PADDING, SIDEBAR_WIDTH
 from typatro.ui.widgets.label import Banner, NavItem
 
 
@@ -19,23 +19,43 @@ def get_username() -> str:
     return username
 
 
+class HeaderBrandColumn(Widget):
+    """Matches ``GameSidebar`` width/padding so the logo aligns with panel borders."""
+
+    DEFAULT_CSS = f"""
+    HeaderBrandColumn {{
+        width: 100%;
+        height: 100%;
+        padding: 0 {SIDEBAR_PADDING};
+    }}
+
+    HeaderBrandColumn > Banner {{
+        width: 100%;
+        min-width: {SIDEBAR_INNER_WIDTH};
+        height: 100%;
+        content-align: center middle;
+        padding: 0;
+    }}
+    """
+
+
 class Header(Widget):
     """
     Header which forms the top banner of the app
     """
 
-    DEFAULT_CSS = """
-    Header {
+    DEFAULT_CSS = f"""
+    Header {{
         layout: grid;
-        grid-size: 4 1;
+        grid-size: 2 1;
         grid-rows: 5;
-        grid-columns: 1fr auto 8fr 1fr;
-    }
+        grid-columns: {SIDEBAR_WIDTH} 1fr;
+    }}
 
-    Header > Horizontal {
-        align: left middle;
+    Header > Horizontal {{
+        align: right middle;
         height: 100%;
-    }
+    }}
     """
 
     def on_resize(self) -> None:
@@ -73,8 +93,8 @@ class Header(Widget):
             i.set_class(i.screen_name == name, "active")
 
     def compose(self) -> ComposeResult:
-        yield Static()
-        yield Banner("typatro")
+        with HeaderBrandColumn():
+            yield Banner("typatro")
 
         with Horizontal():
             home = NavItem("󰌌 home", "typing")

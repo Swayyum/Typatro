@@ -8,8 +8,7 @@ from importlib.resources import files
 from pathlib import Path
 from typing import Optional
 
-# typatro/assets/background.mp3 — copied from repo-root
-# "balatro-type background music (LOOPING-NO COPYRIGHT).mp3"
+# typatro/assets/background.mp3
 _ASSET = "background.mp3"
 
 _instance: Optional["BackgroundMusic"] = None

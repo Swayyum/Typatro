@@ -24,7 +24,7 @@ ColumnState = Literal["spin", "stopping", "stopped"]
 
 
 def hsv_to_hex(h: float, s: float = 1.0, v: float = 1.0) -> str:
-    """HSV (h in degrees) -> #rrggbb. Matches slotslop's rainbow helper."""
+    """HSV (h in degrees) -> #rrggbb for rainbow logo colors."""
     h = h % 360.0
     c = v * s
     x = c * (1 - abs((h / 60.0) % 2 - 1))
@@ -56,7 +56,7 @@ def rainbow_text(
     spread: float = 16.0,
     bold: bool = True,
 ) -> Text:
-    """Per-character cycling rainbow, like slotslop's logo marquee."""
+    """Per-character cycling rainbow for the logo marquee."""
     out = Text()
     style_prefix = "bold " if bold else ""
     for index, char in enumerate(text):
@@ -81,7 +81,7 @@ def marquee_bar(width: int, phase: float, *, hue: float | None = None) -> Text:
 
 @dataclass
 class LogoColumn:
-    """One letter column in the slotslop-style logo reel."""
+    """One letter column in the logo reel."""
 
     target: str
     display: str = "A"
@@ -174,6 +174,7 @@ class LogoReelEngine:
         *,
         with_slots: bool = True,
         marquee: bool = False,
+        bar_width: int | None = None,
     ) -> Text:
         """Build the spaced rainbow logo line (and optional marquee bars)."""
         if phase is None:
@@ -184,8 +185,22 @@ class LogoReelEngine:
         if not marquee:
             return logo_core
 
-        width = self.logo_width(with_slots=with_slots)
-        out = Text(justify="center", no_wrap=True)
+        core_width = self.logo_width(with_slots=with_slots)
+        width = bar_width if bar_width and bar_width > 0 else core_width
+        width = max(width, core_width)
+
+        if width > core_width:
+            pad_left = (width - core_width) // 2
+            pad_right = width - core_width - pad_left
+            centered = Text(no_wrap=True)
+            if pad_left:
+                centered.append(" " * pad_left)
+            centered.append_text(logo_core)
+            if pad_right:
+                centered.append(" " * pad_right)
+            logo_core = centered
+
+        out = Text(justify="left", no_wrap=True)
         out.append_text(marquee_bar(width, phase))
         out.append("\n")
         out.append_text(logo_core)
@@ -194,7 +209,7 @@ class LogoReelEngine:
         return out
 
     def _logo_line(self, phase: float, *, with_slots: bool = True) -> Text:
-        out = Text(justify="center")
+        out = Text(justify="left")
         if with_slots:
             out.append("🎰  ")
 

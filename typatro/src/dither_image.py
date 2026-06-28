@@ -1,12 +1,8 @@
-"""Image-backed POI Studio dither for Bathyn / Veridia themes.
+"""Optional image-backed dither for themed run backdrops.
 
-Loads reference brand art, downscales to the terminal grid, and renders with
-Rich dither characters tinted by sampled RGB. A stochastic grain layer (phase-
-animated) is composited on top so the backdrop reads as photograph + noise,
-not procedural color zones alone.
-
-Falls back to :mod:`typatro.src.dither_poi` when Pillow is unavailable or the
-asset file is missing.
+Downscales bundled reference art to the terminal grid and renders with Rich
+dither characters tinted by sampled RGB. Falls back to procedural grain when
+Pillow is unavailable or no asset is configured.
 """
 
 from __future__ import annotations
@@ -24,10 +20,7 @@ RGB = Tuple[int, int, int]
 Grid = List[List[RGB]]
 
 #: Theme → bundled asset filename under ``typatro.assets``.
-POI_BACKGROUND_ASSETS = {
-    "bathyn": "bathyn_bg.png",
-    "veridia": "veridia_bg.png",
-}
+POI_BACKGROUND_ASSETS: dict[str, str] = {}
 
 #: Downscaled RGB grids keyed by (theme, width, height).
 _sample_cache: Dict[Tuple[str, int, int], Grid] = {}

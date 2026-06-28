@@ -10,8 +10,7 @@ Typatro is a slot-machine typing roguelike for your terminal.
 Type fast, build Chips × Mult, beat Blinds, collect Jokers, and climb Antes —
 all wrapped in a casino-felt TUI with reel-spin animations.
 
-It builds on a Textual typing-test engine with a Balatro-inspired run mode,
-classic practice mode, and a large theme library.
+Run mode, classic practice mode, and a large theme library are included.
 
 Thanks for checking out this project!
 """

@@ -1,6 +1,6 @@
 [project]
 name = "typatro"
-version = "1.0.0"
+version = "1.0.1"
 description = "TYPATRO — a slot-machine typing roguelike for your terminal"
 readme = "README.md"
 license = "GPL-3.0-only"
@@ -32,14 +32,15 @@ Homepage = "https://github.com/Swayyum/Typatro"
 Repository = "https://github.com/Swayyum/Typatro"
 Issues = "https://github.com/Swayyum/Typatro/issues"
 
-[project.scripts]
-typatro = "typatro.__main__:main"
-
 [dependency-groups]
 dev = [
     "pre-commit>=2.17.0",
     "textual-dev>=1.6.1",
     "ruff>=0.6.8",
+    "build>=1.2.0",
+    "twine>=6.0.0",
+    "pytest>=8.0.0",
+    "pytest-asyncio>=0.24.0",
 ]
 
 [build-system]
@@ -51,7 +52,10 @@ where = ["."]
 include = ["typatro*"]
 
 [tool.setuptools.package-data]
-typatro = ["ui/css/**/*.tcss", "assets/*.mp3", "assets/*.png"]
+typatro = ["ui/css/**/*.tcss", "assets/*.mp3", "assets/jokers/*.jpeg", "assets/jokers/*.art.json"]
+
+[project.scripts]
+typatro = "typatro.__main__:main"
 
 [tool.ruff]
 exclude = ["venv"]

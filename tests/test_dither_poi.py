@@ -1,4 +1,4 @@
-"""Tests for POI Studio grain dither (Bathyn / Veridia themes only)."""
+"""Tests for procedural grain dither helpers."""
 
 from typatro.src.dither_poi import (
     ZONE_COUNT,
@@ -9,9 +9,9 @@ from typatro.src.dither_poi import (
 )
 
 
-def test_is_poi_theme_recognizes_bathyn_and_veridia():
-    assert is_poi_theme("bathyn")
-    assert is_poi_theme("veridia")
+def test_is_poi_theme_recognizes_no_themes():
+    assert not is_poi_theme("bathyn")
+    assert not is_poi_theme("veridia")
     assert not is_poi_theme("balatro")
     assert not is_poi_theme(None)
 

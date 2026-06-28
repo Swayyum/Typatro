@@ -38,7 +38,7 @@ class NavItemBase(Widget):
 
 class Banner(NavItemBase):
     """
-    Slotslop-style Vegas logo: spaced rainbow letters with per-column reels
+    Vegas-style rainbow logo: spaced rainbow letters with per-column reels
     that spin, decelerate, and lock left-to-right.
     """
 
@@ -46,12 +46,12 @@ class Banner(NavItemBase):
     Banner {
         height: 100%;
         width: auto;
-        content-align: center middle;
-        padding: 0 1;
+        content-align: left middle;
+        padding: 0;
     }
     """
 
-    SPIN_INTERVAL = 0.07  # ~70ms, matches slotslop FRAME_MS
+    SPIN_INTERVAL = 0.07
     RAINBOW_INTERVAL = 0.033  # ~30fps color cycle while idle
 
     is_tall = reactive(True, layout=True, always_update=True)
@@ -90,11 +90,16 @@ class Banner(NavItemBase):
         super().on_click()
 
     def watch_is_tall(self, value: bool) -> None:
-        self.styles.height = "5" if value else "3"
+        self.styles.height = "100%"
 
     def render(self) -> RenderableType:
         phase = time.monotonic()
-        return self._engine.render_logo(phase, marquee=self.is_tall)
+        bar_width = self.size.width if self.size.width > 0 else None
+        return self._engine.render_logo(
+            phase,
+            marquee=self.is_tall,
+            bar_width=bar_width,
+        )
 
 
 class NavItem(NavItemBase):

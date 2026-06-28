@@ -13,6 +13,7 @@ from typatro.ui.widgets.balatro import ScorePanel, BlindCard, JokerRow
 from textual.containers import VerticalScroll
 from typatro.ui.events import SetScreen
 from typatro.src import run_manager, config_parser
+from typatro.ui.sidebar_layout import SIDEBAR_PADDING, SIDEBAR_WIDTH
 
 
 class TypingScroll(VerticalScroll, can_focus=False):
@@ -37,25 +38,25 @@ class Pad(DitherPassthrough, Widget):
 class GameSidebar(Widget):
     """Balatro-style left panel: blind card, round score, jokers."""
 
-    DEFAULT_CSS = """
-    GameSidebar {
+    DEFAULT_CSS = f"""
+    GameSidebar {{
         layout: vertical;
-        width: 34;
+        width: {SIDEBAR_WIDTH};
         height: 100%;
-        padding: 1 1;
-    }
+        padding: {SIDEBAR_PADDING} {SIDEBAR_PADDING};
+    }}
 
-    GameSidebar.hidden {
+    GameSidebar.hidden {{
         display: none;
-    }
+    }}
 
-    GameSidebar > BlindCard {
+    GameSidebar > BlindCard {{
         margin-bottom: 1;
-    }
+    }}
 
-    GameSidebar > ScorePanel {
+    GameSidebar > ScorePanel {{
         margin-bottom: 1;
-    }
+    }}
     """
 
     def compose(self) -> ComposeResult:

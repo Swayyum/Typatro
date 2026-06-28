@@ -19,6 +19,10 @@ MULT_RED = "#fe5f55"
 CHIPS_BLUE = "#0093ff"
 GOLD = "#eac058"
 
+# Pick-screen card size (portrait-ish in terminal cells).
+CARD_WIDTH = 28
+CARD_HEIGHT = 11
+
 _MULT_EFFECTS = frozenset(
     {
         JokerEffect.FLAT_MULT,
@@ -83,8 +87,22 @@ def render_joker_card(
     width: int,
     *,
     index_label: str | None = None,
+    phase: float = 0.0,
+    screen_x: int = 0,
+    screen_y: int = 0,
 ) -> Text:
-    """Render a full-size white joker card with corner pips."""
+    """Render a Balatro-style pick card — clean text layout for every joker."""
+    del phase, screen_x, screen_y
+    return _render_text_joker_card(joker, width, index_label=index_label)
+
+
+def _render_text_joker_card(
+    joker: JokerDef,
+    width: int,
+    *,
+    index_label: str | None = None,
+) -> Text:
+    """Render a text/emoji joker pick card."""
     inner = width - 2
     card = Text()
 

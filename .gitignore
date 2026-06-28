@@ -19,6 +19,11 @@ styles.tcss
 # only allow .tcss
 !/typatro/ui/css/themes/*.tcss
 
+# Scraped / local research artifacts (not shipped)
+.firecrawl/
+
+.DS_Store
+
 # Byte-compiled / optimized / DLL files
 __pycache__/
 *.py[cod]

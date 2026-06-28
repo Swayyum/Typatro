@@ -5,6 +5,10 @@ from typing import Optional
 from pathlib import Path
 
 LANGUAGE_PACK_DIR = Path(platformdirs.user_data_dir("typatro")) / "languages"
+_REMOTE_LANGUAGE_BASE = (
+    "https://raw.githubusercontent.com/monkeytypegame/monkeytype/master"
+    "/frontend/static/languages"
+)
 
 
 class AddLanguage:
@@ -23,7 +27,7 @@ class AddLanguage:
     def get_pack(self, name: str) -> Optional[str]:
         """Checks if a language pack exists. If found, it returns its contents otherwise it returns None"""
 
-        uri = f"https://raw.githubusercontent.com/monkeytypegame/monkeytype/master/frontend/static/languages/{name}.json"
+        uri = f"{_REMOTE_LANGUAGE_BASE}/{name}.json"
         req = requests.get(uri)
 
         return req.text if (req.status_code == 200) else None

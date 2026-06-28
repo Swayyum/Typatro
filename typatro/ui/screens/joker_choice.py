@@ -11,7 +11,11 @@ from textual.widgets import Static
 from typatro.src.jokers import JokerDef, pick_random_jokers
 from typatro.ui.events import JokerSelected
 from typatro.ui.widgets.balatro.dither import DitherBackground
-from typatro.ui.widgets.balatro.joker_card_art import render_joker_card
+from typatro.ui.widgets.balatro.joker_card_art import (
+    CARD_HEIGHT as JOKER_CARD_HEIGHT,
+    CARD_WIDTH as JOKER_CARD_WIDTH,
+    render_joker_card,
+)
 
 
 class JokerOptionsRow(Horizontal):
@@ -27,17 +31,18 @@ class JokerOption(Widget):
 
     DEFAULT_CSS = """
     JokerOption {
-        width: 24;
+        width: 28;
         height: 11;
-        min-width: 24;
+        min-width: 28;
         min-height: 11;
         margin: 0 1;
         content-align: center middle;
+        background: #f6f1e3;
     }
     """
 
-    CARD_WIDTH = 24
-    CARD_HEIGHT = 11
+    CARD_WIDTH = JOKER_CARD_WIDTH
+    CARD_HEIGHT = JOKER_CARD_HEIGHT
 
     def __init__(self, joker: JokerDef, index: int, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -48,10 +53,17 @@ class JokerOption(Widget):
         self.post_message(JokerSelected(self.joker))
 
     def render(self) -> RenderableType:
+        phase = 0.0
+        screen = self.screen
+        if isinstance(screen, JokerChoiceScreen):
+            phase = getattr(screen, "_art_phase", 0.0)
         return render_joker_card(
             self.joker,
             self.CARD_WIDTH,
             index_label=f"[ {self.index + 1} ]",
+            phase=phase,
+            screen_x=self.region.x,
+            screen_y=self.region.y,
         )
 
 
@@ -90,7 +102,7 @@ class JokerChoicePanel(Widget):
     #joker-options {
         width: auto;
         height: auto;
-        min-width: 80;
+        min-width: 90;
         layout: horizontal;
         align: center middle;
         content-align: center middle;
@@ -142,6 +154,9 @@ class JokerChoiceScreen(Screen):
                 with JokerOptionsRow(id="joker-options"):
                     for i, joker in enumerate(self._choices):
                         yield JokerOption(joker, i)
+
+    def on_mount(self) -> None:
+        self._art_phase = 0.0
 
     def _pick(self, index: int) -> None:
         if 0 <= index < len(self._choices):
