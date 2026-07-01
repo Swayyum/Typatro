@@ -70,7 +70,7 @@ class DitherBackground(Widget, can_focus=False):
         """Pause backdrop animation while the user is typing (keeps input responsive)."""
         if not is_balatro_experience() or not self.display:
             return
-        if self._timer is not None:
+        if self._timer is not None and not self._timer.is_paused:
             self._timer.pause()
         if self._idle_timer is not None:
             self._idle_timer.stop()

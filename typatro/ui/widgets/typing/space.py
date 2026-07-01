@@ -1,23 +1,25 @@
 from bisect import bisect_right
-from typing import List
+from typing import List, Optional, Set
+
 from rich.console import RenderableType
 from rich.style import Style
 from rich.text import Span, Text
 from textual.widget import Widget
 from textual.widgets import Static
-from typatro.src import master_generator, Tracker, Cursor, ScoringEngine, run_manager, config_parser
+
+from typatro.src import (
+    Cursor,
+    ScoringEngine,
+    Tracker,
+    config_parser,
+    master_generator,
+    run_manager,
+)
 from typatro.src.buddy import Buddy
 from typatro.ui.events import ShowResults
 from typatro.ui.widgets.typing.ticker import Ticker
 
-
-def _notify_typing_activity(space: "Space") -> None:
-    try:
-        from typatro.ui.widgets.balatro import DitherBackground
-
-        space.app.query_one(DitherBackground).on_typing_activity()
-    except Exception:
-        pass
+_INCORRECT_SPACE_CHARACTER = "░"
 
 
 def _get_score_panel(space: "Space"):
@@ -40,28 +42,6 @@ def _get_blind_card(space: "Space"):
 
 def _is_run_mode() -> bool:
     return config_parser.get("game_mode") == "run"
-
-
-def caret(func):
-    def wrapper(space: "Space") -> Text:
-        renderable: Text = func(space).copy()
-        setting = config_parser.get("caret_style")
-        pos = space.tracker.cursor_pos
-
-        if setting == "off" or pos == len(space.paragraph.plain):
-            return renderable
-
-        if setting == "underline":
-            rich_style = "--caret-underline"
-        else:
-            rich_style = "--caret-block"
-
-        style = space.get_component_rich_style(rich_style)
-        renderable.spans.append(Span(pos, pos + 1, style))
-
-        return renderable
-
-    return wrapper
 
 
 def tab_reset(func):
@@ -97,59 +77,6 @@ def toggle_settings(func):
     return wrapper
 
 
-def cursor_buddy(func):
-    def wrapper(space: "Space") -> RenderableType:
-        wpm = config_parser.get("cursor_buddy_speed")
-        res = func(space)
-
-        if not wpm or not space.tracker.stats.start_time:
-            return res
-
-        elapsed = space.tracker.stats.elapsed_time
-        letters_typed = Buddy.get_letters_typed(elapsed, wpm, 5)
-        letters_typed = min(letters_typed, len(space.paragraph.plain) - 1)
-
-        res_copy = res.copy()
-        style = space.get_component_rich_style("--cursor-buddy")
-        res_copy.spans.append(Span(letters_typed, letters_typed + 1, style))
-        return res_copy
-
-    return wrapper
-
-
-def blind_mode(func):
-    def wrapper(space: "Space", *args, **kwargs) -> Style:
-        if config_parser.get("blind_mode") == "on":
-            return space.get_component_rich_style("--blind-match")
-
-        return func(space, *args, **kwargs)
-
-    return wrapper
-
-
-def incorrect_spaces(func):
-    INCORRECT_SPACE_CHARACTER = "░"
-
-    def wrapper(space: "Space") -> RenderableType:
-        text: Text = func(space)
-        incorrect_style = space.get_match_style(False)
-
-        plain_text = text.plain
-
-        for span in text.spans:
-            if span.style == incorrect_style and plain_text[span.start] == " ":
-                plain_text = (
-                    plain_text[: span.start]
-                    + INCORRECT_SPACE_CHARACTER
-                    + plain_text[span.end :]
-                )
-
-        text.plain = plain_text
-        return text
-
-    return wrapper
-
-
 class Space(Static):
     """
     Space Widget to handle keypress and display typing text
@@ -170,18 +97,71 @@ class Space(Static):
         self.scoring = ScoringEngine()
         self.target_score = 0
         self._styled_spans: List[Span] = []
+        self._incorrect_space_positions: Set[int] = set()
+        self._style_correct: Style = Style()
+        self._style_incorrect: Style = Style()
+        self._caret_style: Optional[Style] = None
+        self._buddy_style: Style = Style()
+        self._buddy_wpm = 0
+        self._styles_initialized = False
+        self._dither_bg = None
+        self._score_panel = None
+        self._ticker: Optional[Ticker] = None
         self.reset()
         self.check_timer = self.set_interval(1, self.check_restrictions, pause=True)
-        if config_parser.get("cursor_buddy_speed"):
-            self.set_interval(0.2, self.refresh)
+
+    def on_mount(self) -> None:
+        self._cache_styles()
+        try:
+            from typatro.ui.widgets.balatro import DitherBackground
+
+            self._dither_bg = self.app.query_one(DitherBackground)
+        except Exception:
+            self._dither_bg = None
+        self._score_panel = _get_score_panel(self)
+        try:
+            self._ticker = self.screen.query_one(Ticker)
+        except Exception:
+            self._ticker = None
+        if self._buddy_wpm:
+            self.set_interval(0.5, self._refresh_cursor_buddy)
+
+    def _refresh_cursor_buddy(self) -> None:
+        if self._buddy_wpm:
+            self.refresh(layout=False)
+
+    def _cache_styles(self) -> None:
+        if not self.is_mounted:
+            return
+        blind = config_parser.get("blind_mode") == "on"
+        if blind:
+            blind_style = self.get_component_rich_style("--blind-match")
+            self._style_correct = blind_style
+            self._style_incorrect = blind_style
+        else:
+            self._style_correct = self.get_component_rich_style("--correct-match")
+            self._style_incorrect = self.get_component_rich_style("--incorrect-match")
+
+        setting = config_parser.get("caret_style")
+        if setting == "underline":
+            self._caret_style = self.get_component_rich_style("--caret-underline")
+        elif setting == "off":
+            self._caret_style = None
+        else:
+            self._caret_style = self.get_component_rich_style("--caret-block")
+
+        self._buddy_style = self.get_component_rich_style("--cursor-buddy")
+        self._buddy_wpm = config_parser.get("cursor_buddy_speed")
+        self._styles_initialized = True
+
+    def _ensure_styles(self) -> None:
+        if self.is_mounted and not self._styles_initialized:
+            self._cache_styles()
 
     # ---------------- UTILS -----------------
 
     def cursor_row(self, cursor_pos: int) -> int:
         return bisect_right(self.newlines, cursor_pos)
-
-    def cursor_span(self, pos: int) -> Span:
-        return Span(pos, pos + 1, "reverse white")
 
     # ----------------- RENDER ------------------
     def on_show(self) -> None:
@@ -230,7 +210,7 @@ class Space(Static):
 
         if _is_run_mode():
             score_state = self.scoring.finalize(self.tracker.stats)
-            panel = _get_score_panel(self)
+            panel = self._score_panel or _get_score_panel(self)
             if panel:
                 panel.update_score(score_state)
 
@@ -294,7 +274,7 @@ class Space(Static):
                     run_manager.state.ante,
                 )
 
-            panel = _get_score_panel(self)
+            panel = self._score_panel or _get_score_panel(self)
             if panel:
                 panel.reset()
         else:
@@ -303,25 +283,74 @@ class Space(Static):
 
         self.cursor = 0
         self._styled_spans = []
+        self._incorrect_space_positions = set()
+        self._styles_initialized = False
 
         if self.size.width:
             self.reset_newlines()
-            self.screen.query_one(Ticker).reset()
+            ticker = self._ticker or self.screen.query_one(Ticker)
+            ticker.reset()
 
         self.refresh(layout=True)
 
-    @cursor_buddy
-    @caret
-    @incorrect_spaces
-    def render(self) -> RenderableType:
-        self.paragraph.spans = self._styled_spans
-        return self.paragraph
+    def _overlay_spans(self) -> List[Span]:
+        extra: List[Span] = []
+        pos = self.tracker.cursor_pos
+        plain_len = len(self.paragraph.plain)
 
-    @blind_mode
-    def get_match_style(self, correct: bool) -> Style:
-        rich_style = "correct" if correct else "incorrect"
-        style = self.get_component_rich_style(f"--{rich_style}-match")
-        return style
+        if self._caret_style is not None and pos < plain_len:
+            extra.append(Span(pos, pos + 1, self._caret_style))
+
+        if self._buddy_wpm and self.tracker.stats.start_time:
+            elapsed = self.tracker.stats.elapsed_time
+            letters = min(Buddy.get_letters_typed(elapsed, self._buddy_wpm, 5), plain_len - 1)
+            extra.append(Span(letters, letters + 1, self._buddy_style))
+
+        return extra
+
+    def render(self) -> RenderableType:
+        self._ensure_styles()
+        overlay = self._overlay_spans()
+        spans: List[Span] = (
+            self._styled_spans + overlay if overlay else self._styled_spans
+        )
+
+        if not self._incorrect_space_positions:
+            self.paragraph.spans = spans
+            return self.paragraph
+
+        buf = list(self.paragraph.plain)
+        for index in self._incorrect_space_positions:
+            buf[index] = _INCORRECT_SPACE_CHARACTER
+        text = Text("".join(buf))
+        text.spans = spans
+        return text
+
+    def _truncate_styles(self, pos: int) -> None:
+        trimmed: List[Span] = []
+        for span in self._styled_spans:
+            if span.start >= pos:
+                break
+            if span.end <= pos:
+                trimmed.append(span)
+            else:
+                trimmed.append(Span(span.start, pos, span.style))
+                break
+        self._styled_spans = trimmed
+        if self._incorrect_space_positions:
+            self._incorrect_space_positions = {
+                index for index in self._incorrect_space_positions if index < pos
+            }
+
+    def _append_styled_span(self, start: int, end: int, style: Style) -> None:
+        if end <= start:
+            return
+        if self._styled_spans:
+            last = self._styled_spans[-1]
+            if last.style == style and last.end == start:
+                self._styled_spans[-1] = Span(last.start, end, style)
+                return
+        self._styled_spans.append(Span(start, end, style))
 
     def update_colors(self, cursor: Cursor) -> None:
         old = cursor.old
@@ -329,19 +358,28 @@ class Space(Static):
         correct = cursor.correct
 
         if new < old:
-            self._styled_spans = self._styled_spans[:new]
+            self._truncate_styles(new)
             return
 
-        diff = new - old
-        if diff > 1:
-            blank = self.get_match_style(True)
+        style = self._style_correct if correct else self._style_incorrect
+        if new - old > 1:
             for pos in range(old, new - 1):
-                self._styled_spans.append(Span(pos, pos + 1, blank))
+                self._append_styled_span(pos, pos + 1, self._style_correct)
 
-        if diff >= 1:
-            self._styled_spans.append(
-                Span(new - 1, new, self.get_match_style(correct))
-            )
+        if new > old:
+            self._append_styled_span(new - 1, new, style)
+            if not correct and self.paragraph.plain[new - 1] == " ":
+                self._incorrect_space_positions.add(new - 1)
+
+    def _notify_typing_activity(self) -> None:
+        if self._dither_bg is None:
+            try:
+                from typatro.ui.widgets.balatro import DitherBackground
+
+                self._dither_bg = self.app.query_one(DitherBackground)
+            except Exception:
+                return
+        self._dither_bg.on_typing_activity()
 
     # ---------------- KEYPRESS -----------------
 
@@ -367,17 +405,20 @@ class Space(Static):
                     self.parent.scroll_up()
 
         self.update_colors(cursor)
-        _notify_typing_activity(self)
+        self._notify_typing_activity()
 
         if _is_run_mode():
             state = self.scoring.on_keystroke(cursor, self.tracker.stats)
-            panel = _get_score_panel(self)
+            panel = self._score_panel or _get_score_panel(self)
             if panel:
-                panel.update_score(state)
+                panel.push_score(state)
 
         if cursor.new == len(self.paragraph.plain):
             return self.finish_typing(fail=False)
 
         self.check_timer.resume()
-        self.screen.query_one(Ticker).update_check.resume()
+        ticker = self._ticker
+        if ticker is not None:
+            ticker.update_check.resume()
+
         self.refresh(layout=False)

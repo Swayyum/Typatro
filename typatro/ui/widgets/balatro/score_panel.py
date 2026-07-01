@@ -75,6 +75,30 @@ class ScorePanel(Widget):
             self._last_roll_refresh = now
             self.refresh()
 
+    def push_score(self, state: ScoreState) -> None:
+        """Typing hot path: update score state without repainting the sidebar."""
+        self._chips = state.chips
+        self._mult = state.mult
+        self._odometer.set_target(state.score)
+        if not is_balatro_experience():
+            return
+        if self._odometer.done:
+            self._display_score = int(self._odometer.value)
+            self.remove_class("rolling")
+            if self._roll_timer is not None and hasattr(self._roll_timer, "pause"):
+                self._roll_timer.pause()
+            return
+        self._display_score = int(self._odometer.tick())
+        self._pulse_frame += 1
+        if self._odometer.done:
+            self.remove_class("rolling")
+            if self._roll_timer is not None and hasattr(self._roll_timer, "pause"):
+                self._roll_timer.pause()
+        elif self._roll_timer is not None:
+            self.add_class("rolling")
+            if hasattr(self._roll_timer, "resume"):
+                self._roll_timer.resume()
+
     def update_score(self, state: ScoreState) -> None:
         self._chips = state.chips
         self._mult = state.mult
