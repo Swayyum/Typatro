@@ -2,6 +2,7 @@
 
 import colorsys
 import math
+import time
 
 from rich.console import RenderableType
 from rich.style import Style
@@ -30,7 +31,8 @@ class ScorePanel(Widget):
 
     COMPONENT_CLASSES = {"--chips", "--mult", "--score", "--label"}
 
-    TICK_INTERVAL = 0.04
+    TICK_INTERVAL = 0.05
+    ROLL_REFRESH_INTERVAL = 0.05
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
@@ -40,6 +42,7 @@ class ScorePanel(Widget):
         self._display_score = 0
         self._roll_timer = None
         self._pulse_frame = 0
+        self._last_roll_refresh = 0.0
 
     def on_mount(self) -> None:
         self._roll_timer = self.set_interval(
@@ -67,7 +70,10 @@ class ScorePanel(Widget):
         if self._odometer.done:
             self._roll_timer.pause()
             self.remove_class("rolling")
-        self.refresh()
+        now = time.monotonic()
+        if now - self._last_roll_refresh >= self.ROLL_REFRESH_INTERVAL:
+            self._last_roll_refresh = now
+            self.refresh()
 
     def update_score(self, state: ScoreState) -> None:
         self._chips = state.chips
@@ -85,17 +91,8 @@ class ScorePanel(Widget):
             if self._roll_timer is not None and hasattr(self._roll_timer, "pause"):
                 self._roll_timer.pause()
         else:
-            gap = state.score - self._display_score
-            if gap <= 8:
-                # Per-keystroke updates stay in sync without waiting on the timer.
-                for _ in range(64):
-                    if self._odometer.done:
-                        break
-                    self._display_score = self._odometer.tick()
-                    self._pulse_frame += 1
-            else:
-                self._display_score = self._odometer.tick()
-                self._pulse_frame += 1
+            self._display_score = self._odometer.tick()
+            self._pulse_frame += 1
             if self._odometer.done:
                 self.remove_class("rolling")
                 if self._roll_timer is not None and hasattr(self._roll_timer, "pause"):

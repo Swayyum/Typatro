@@ -26,12 +26,14 @@ class DitherBackground(Widget, can_focus=False):
 
     COMPONENT_CLASSES = {"--dither-dim", "--dither-mid", "--dither-bright"}
 
-    TICK_INTERVAL = 0.28
+    TICK_INTERVAL = 0.5
+    TYPING_IDLE_DELAY = 0.35
 
     def __init__(self, **kwargs) -> None:
         super().__init__(**kwargs)
         self._phase = 0.0
         self._timer = None
+        self._idle_timer = None
 
     def on_mount(self) -> None:
         self.set_experience_active(is_balatro_experience())
@@ -63,6 +65,25 @@ class DitherBackground(Widget, can_focus=False):
         self._phase += self.TICK_INTERVAL
         if self.size.width > 0:
             self.refresh()
+
+    def on_typing_activity(self) -> None:
+        """Pause backdrop animation while the user is typing (keeps input responsive)."""
+        if not is_balatro_experience() or not self.display:
+            return
+        if self._timer is not None:
+            self._timer.pause()
+        if self._idle_timer is not None:
+            self._idle_timer.stop()
+        self._idle_timer = self.set_timer(
+            self.TYPING_IDLE_DELAY,
+            self._resume_after_typing,
+            name="dither-typing-idle",
+        )
+
+    def _resume_after_typing(self) -> None:
+        self._idle_timer = None
+        if self._timer is not None and is_balatro_experience() and self.display:
+            self._timer.resume()
 
     @staticmethod
     def _style_str(style: Style) -> str:

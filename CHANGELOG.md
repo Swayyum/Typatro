@@ -5,6 +5,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.2
+
+### Changed
+
+- Typing performance optimizations for Windows and smoother gliding during input
+- Incremental span styling in the typing widget; layout refresh throttled during keystrokes
+- Score panel: single odometer tick per keystroke with throttled roll refresh
+- Dither animation slowed and paused while typing; ticker interval set to 0.2s
+
 ## 1.0.1
 
 ### Changed

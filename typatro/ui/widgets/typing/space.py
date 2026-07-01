@@ -11,6 +11,15 @@ from typatro.ui.events import ShowResults
 from typatro.ui.widgets.typing.ticker import Ticker
 
 
+def _notify_typing_activity(space: "Space") -> None:
+    try:
+        from typatro.ui.widgets.balatro import DitherBackground
+
+        space.app.query_one(DitherBackground).on_typing_activity()
+    except Exception:
+        pass
+
+
 def _get_score_panel(space: "Space"):
     try:
         from typatro.ui.widgets.balatro import ScorePanel
@@ -160,10 +169,11 @@ class Space(Static):
         self.current_key = None
         self.scoring = ScoringEngine()
         self.target_score = 0
+        self._styled_spans: List[Span] = []
         self.reset()
         self.check_timer = self.set_interval(1, self.check_restrictions, pause=True)
         if config_parser.get("cursor_buddy_speed"):
-            self.set_interval(0.1, self.refresh)
+            self.set_interval(0.2, self.refresh)
 
     # ---------------- UTILS -----------------
 
@@ -292,7 +302,7 @@ class Space(Static):
             self.scoring.reset()
 
         self.cursor = 0
-        self.paragraph_spans = []
+        self._styled_spans = []
 
         if self.size.width:
             self.reset_newlines()
@@ -304,7 +314,7 @@ class Space(Static):
     @caret
     @incorrect_spaces
     def render(self) -> RenderableType:
-        self.paragraph.spans = self.get_colorized()
+        self.paragraph.spans = self._styled_spans
         return self.paragraph
 
     @blind_mode
@@ -313,42 +323,25 @@ class Space(Static):
         style = self.get_component_rich_style(f"--{rich_style}-match")
         return style
 
-    def get_colorized(self) -> List[Span]:
-        spans = []
-        for index, keymatch in enumerate(self.paragraph_spans):
-            if keymatch != "":
-                spans.append(
-                    Span(
-                        index,
-                        index + 1,
-                        self.get_match_style(keymatch),
-                    )
-                )
-            else:
-                spans.append(
-                    Span(
-                        index,
-                        index + 1,
-                        "",
-                    )
-                )
-
-        return spans
-
     def update_colors(self, cursor: Cursor) -> None:
         old = cursor.old
         new = cursor.new
         correct = cursor.correct
 
         if new < old:
-            self.paragraph_spans = self.paragraph_spans[:new]
+            self._styled_spans = self._styled_spans[:new]
             return
 
         diff = new - old
-        self.paragraph_spans.extend([""] * (diff - 1))
+        if diff > 1:
+            blank = self.get_match_style(True)
+            for pos in range(old, new - 1):
+                self._styled_spans.append(Span(pos, pos + 1, blank))
 
-        if diff == 1:
-            self.paragraph_spans.append(correct)
+        if diff >= 1:
+            self._styled_spans.append(
+                Span(new - 1, new, self.get_match_style(correct))
+            )
 
     # ---------------- KEYPRESS -----------------
 
@@ -374,6 +367,7 @@ class Space(Static):
                     self.parent.scroll_up()
 
         self.update_colors(cursor)
+        _notify_typing_activity(self)
 
         if _is_run_mode():
             state = self.scoring.on_keystroke(cursor, self.tracker.stats)
@@ -386,4 +380,4 @@ class Space(Static):
 
         self.check_timer.resume()
         self.screen.query_one(Ticker).update_check.resume()
-        self.refresh()
+        self.refresh(layout=False)

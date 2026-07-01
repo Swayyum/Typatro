@@ -9,7 +9,7 @@ class Ticker(Widget):
 
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.update_check = self.set_interval(0.1, self.update)
+        self.update_check = self.set_interval(0.2, self.update)
         self.reset()
 
     def update(self) -> None:
