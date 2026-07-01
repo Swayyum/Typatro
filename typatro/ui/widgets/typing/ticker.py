@@ -7,16 +7,35 @@ class Ticker(Widget):
     Ticker widget to show time/word left
     """
 
+    TICK_INTERVAL = 0.5
+
     def __init__(self, *args, **kwargs) -> None:
         super().__init__(*args, **kwargs)
-        self.update_check = self.set_interval(0.2, self.update)
+        self.update_check = self.set_interval(self.TICK_INTERVAL, self.update, pause=True)
+        self._space = None
         self.reset()
+
+    def on_mount(self) -> None:
+        try:
+            from typatro.ui.widgets import Space
+
+            self._space = self.screen.query_one(Space)
+        except Exception:
+            self._space = None
 
     def update(self) -> None:
         from typatro.ui.widgets import Space
 
+        space = self._space
+        if space is None:
+            try:
+                space = self.screen.query_one(Space)
+                self._space = space
+            except Exception:
+                return
+
         mode = config_parser.get("mode")
-        stats = self.screen.query_one(Space).tracker.stats
+        stats = space.tracker.stats
 
         if not stats.start_time:
             return
@@ -24,16 +43,19 @@ class Ticker(Widget):
         if mode == "words":
             count = config_parser.get("words_count")
             words_typed = stats.word_count
-            self.text = f"{words_typed}/{count}"
+            new_text = f"{words_typed}/{count}"
         else:
-            if stats.start_time:
-                count = config_parser.get("time_count")
-                time_remaining = count - stats.elapsed_time
-                if time_remaining <= 0:
-                    return self.screen.query_one(Space).finish_typing(fail=False)
+            count = config_parser.get("time_count")
+            time_remaining = count - stats.elapsed_time
+            if time_remaining <= 0:
+                return space.finish_typing(fail=False)
 
-                self.text = str(round(time_remaining))
+            new_text = str(round(time_remaining))
 
+        if new_text == self.text:
+            return
+
+        self.text = new_text
         self.refresh()
 
     def reset(self) -> None:

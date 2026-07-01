@@ -204,3 +204,28 @@ def test_render_joker_card_text_layout(monkeypatch):
     assert "▗" in plain
     assert plain.count("\n") + 1 == CARD_HEIGHT
     assert "♦" in plain
+
+
+def test_render_joker_sidebar_entry_shows_name_and_effect():
+    from rich.style import Style
+
+    from typatro.src.jokers import get_joker_by_id
+    from typatro.ui.widgets.balatro.joker_card_art import render_joker_sidebar_entry
+
+    joker = get_joker_by_id("mystic")
+    assert joker is not None
+    text = render_joker_sidebar_entry(
+        joker,
+        30,
+        icon_style=Style(),
+        name_style=Style(),
+        mult_style=Style(),
+        chips_style=Style(),
+        muted_style=Style(),
+        slot=1,
+    )
+    assert "Mystic Summit" in text.plain
+    assert "Mult" in text.plain
+    lines = text.plain.split("\n")
+    assert len(lines) == 2
+    assert lines[1].strip().startswith("+")

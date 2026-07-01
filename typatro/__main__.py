@@ -1,6 +1,6 @@
 import click
 
-PKG_VERSION = "1.0.3"
+PKG_VERSION = "1.0.4"
 
 
 @click.group(

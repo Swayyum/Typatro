@@ -38,16 +38,19 @@ class StatsTracker:
         self.reset()
 
     def get_checkpoints_last_word(self) -> List[CheckPoint]:
-        checkpoints = self.checkpoints.copy()
-        word_checkpoints = []
+        if not self.checkpoints:
+            return []
 
-        while checkpoints and checkpoints[-1].letter == " ":
-            checkpoints.pop()
+        end = len(self.checkpoints) - 1
+        while end >= 0 and self.checkpoints[end].letter == " ":
+            end -= 1
+        if end < 0:
+            return []
 
-        while checkpoints and checkpoints[-1].letter != " ":
-            word_checkpoints.append(checkpoints.pop())
-
-        return list(reversed(word_checkpoints))
+        start = end
+        while start >= 0 and self.checkpoints[start].letter != " ":
+            start -= 1
+        return self.checkpoints[start + 1 : end + 1]
 
     @property
     def elapsed_time(self) -> float:
@@ -61,10 +64,8 @@ class StatsTracker:
 
     @property
     def word_count(self) -> int:
-        if not self.checkpoints:
-            return 0
-
-        return sum(checkpoint.letter == " " for checkpoint in self.checkpoints)
+        self._ensure_counter_sync()
+        return self._word_count
 
     @property
     def last_word_accuracy(self) -> int:
@@ -82,7 +83,6 @@ class StatsTracker:
 
         total = correct + incorrect
         if total == 0:
-            # Only backspaces/skips in the last word — accuracy is undefined
             raise ValueError("No typed characters in last word")
 
         return round((correct / total) * 100)
@@ -111,14 +111,13 @@ class StatsTracker:
 
     @property
     def accuracy(self) -> int:
-        total_typed = self.correct + self.incorrect
+        self._ensure_counter_sync()
+        total_typed = self._match_count + self._mismatch_count
 
         if total_typed == 0:
             return 0
 
-        accuracy = (self.correct / total_typed) * 100
-
-        return int(accuracy)
+        return int((self._match_count / total_typed) * 100)
 
     @property
     def wpm(self) -> int:
@@ -126,13 +125,13 @@ class StatsTracker:
 
     @property
     def correct(self) -> int:
-        return sum(checkpoint.correct == Match.MATCH for checkpoint in self.checkpoints)
+        self._ensure_counter_sync()
+        return self._match_count
 
     @property
     def incorrect(self) -> int:
-        return sum(
-            checkpoint.correct == Match.MISMATCH for checkpoint in self.checkpoints
-        )
+        self._ensure_counter_sync()
+        return self._mismatch_count
 
     @property
     def missed(self) -> int:
@@ -146,9 +145,28 @@ class StatsTracker:
         self.start_time = None
         self.end_time = None
         self.checkpoints: List[CheckPoint] = []
+        self._match_count = 0
+        self._mismatch_count = 0
+        self._word_count = 0
+        self._counter_synced_len = 0
 
     def finish(self) -> None:
         self.end_time = time()
+
+    def _ensure_counter_sync(self) -> None:
+        if self._counter_synced_len == len(self.checkpoints):
+            return
+        self._match_count = sum(
+            checkpoint.correct == Match.MATCH for checkpoint in self.checkpoints
+        )
+        self._mismatch_count = sum(
+            checkpoint.correct == Match.MISMATCH for checkpoint in self.checkpoints
+        )
+        self._word_count = sum(
+            checkpoint.letter == " " and checkpoint.correct == Match.MATCH
+            for checkpoint in self.checkpoints
+        )
+        self._counter_synced_len = len(self.checkpoints)
 
     def add_checkpoint(self, checkpoint: CheckPoint) -> None:
         if not self.start_time:
@@ -158,3 +176,10 @@ class StatsTracker:
         checkpoint.add_elapsed(elapsed)
 
         self.checkpoints.append(checkpoint)
+        if checkpoint.correct == Match.MATCH:
+            self._match_count += 1
+            if checkpoint.letter == " ":
+                self._word_count += 1
+        elif checkpoint.correct == Match.MISMATCH:
+            self._mismatch_count += 1
+        self._counter_synced_len = len(self.checkpoints)

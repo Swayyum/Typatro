@@ -128,6 +128,15 @@ class TypingSpace(DitherPassthrough, Widget):
 
     def on_mount(self) -> None:
         self.query_one(JokerRow).update_jokers(run_manager.state.jokers)
+        self._pause_header_animation()
+
+    def _pause_header_animation(self) -> None:
+        try:
+            from typatro.ui.widgets.label import Banner
+
+            self.app.screen.query_one(Banner).set_animation_active(False)
+        except Exception:
+            pass
 
     def keypress(self, key: str):
         if key == "ctrl+s":
@@ -157,3 +166,17 @@ class TypingScreen(BaseWindow):
         event.stop()
         key = event.character if event.is_printable and event.character else event.key
         self.query_one(TypingSpace).keypress(key)
+
+    def on_show(self) -> None:
+        self._set_banner_animation(False)
+
+    def on_hide(self) -> None:
+        self._set_banner_animation(True)
+
+    def _set_banner_animation(self, active: bool) -> None:
+        try:
+            from typatro.ui.widgets.label import Banner
+
+            self.app.screen.query_one(Banner).set_animation_active(active)
+        except Exception:
+            pass

@@ -134,17 +134,49 @@ def _render_text_joker_card(
     return card
 
 
-def render_joker_line(joker: JokerDef, width: int) -> Text:
-    """One-line joker stub for the sidebar: icon, name, effect."""
-    line = Text()
-    icon_part = f" {joker.icon} "
-    line.append(icon_part, style=ICON_STYLE)
+def render_joker_sidebar_entry(
+    joker: JokerDef,
+    width: int,
+    *,
+    icon_style: Style,
+    name_style: Style,
+    mult_style: Style,
+    chips_style: Style,
+    muted_style: Style,
+    slot: int | None = None,
+) -> Text:
+    """Two-line sidebar entry: slot, icon, name, then full effect on line two."""
+    text = Text()
+    desc_style = mult_style if joker.effect in _MULT_EFFECTS else chips_style
+
+    slot_prefix = f"{slot} " if slot is not None else ""
+    slot_cells = _cell_len(slot_prefix)
+    icon_part = f"{joker.icon} "
     icon_cells = _cell_len(icon_part)
-    desc = _truncate(joker.description, max(6, width - _cell_len(joker.name) - icon_cells - 2))
-    name = _truncate(joker.name, width - _cell_len(desc) - icon_cells - 2)
-    line.append(f"{name} ", style=NAME_STYLE)
-    used = icon_cells + _cell_len(f"{name} ") + _cell_len(f"{desc} ")
-    pad = max(0, width - used)
-    line.append(" " * pad, style=BODY_STYLE)
-    line.append(f"{desc} ", style=effect_style(joker))
-    return line
+    name_budget = max(6, width - slot_cells - icon_cells)
+    name = _truncate(joker.name, name_budget)
+
+    text.append(slot_prefix, style=muted_style)
+    text.append(icon_part, style=icon_style)
+    text.append(name, style=name_style)
+    text.append("\n")
+
+    indent_cells = slot_cells + icon_cells
+    desc_budget = max(8, width - indent_cells)
+    desc = _truncate(joker.description, desc_budget)
+    text.append(" " * indent_cells, style=muted_style)
+    text.append(desc, style=desc_style)
+    return text
+
+
+def render_joker_line(joker: JokerDef, width: int) -> Text:
+    """Single-line fallback using pick-screen colors (tests / legacy)."""
+    return render_joker_sidebar_entry(
+        joker,
+        width,
+        icon_style=ICON_STYLE,
+        name_style=NAME_STYLE,
+        mult_style=MULT_STYLE,
+        chips_style=CHIPS_STYLE,
+        muted_style=HINT_STYLE,
+    )

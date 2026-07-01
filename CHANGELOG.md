@@ -5,6 +5,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## 1.0.4
+
+### Changed
+
+- Fix typing lag in long sessions: pause header logo animation while typing, incremental stats counters
+- Ticker updates less often and skips redraws when the value is unchanged
+- Sidebar joker list shows numbered two-line cards with full name and effect (readable on dark themes)
+
 ## 1.0.3
 
 ### Changed

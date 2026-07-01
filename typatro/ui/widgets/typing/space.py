@@ -405,7 +405,8 @@ class Space(Static):
                     self.parent.scroll_up()
 
         self.update_colors(cursor)
-        self._notify_typing_activity()
+        if _is_run_mode():
+            self._notify_typing_activity()
 
         if _is_run_mode():
             state = self.scoring.on_keystroke(cursor, self.tracker.stats)

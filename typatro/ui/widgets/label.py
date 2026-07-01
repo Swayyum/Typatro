@@ -52,13 +52,16 @@ class Banner(NavItemBase):
     """
 
     SPIN_INTERVAL = 0.07
-    RAINBOW_INTERVAL = 0.033  # ~30fps color cycle while idle
+    RAINBOW_INTERVAL = 2.0
 
     is_tall = reactive(True, layout=True, always_update=True)
 
     def __init__(self, text: str, screen_name: Optional[str] = None) -> None:
         super().__init__(text, screen_name)
         self._engine = LogoReelEngine(target=text)
+        self._spin_timer = None
+        self._rainbow_timer = None
+        self._animation_active = True
 
     def get_content_width(self, container, viewport) -> int:
         return self._engine.logo_width() + 2  # + horizontal padding
@@ -68,21 +71,44 @@ class Banner(NavItemBase):
 
     def on_mount(self) -> None:
         self._spin_timer = self.set_interval(self.SPIN_INTERVAL, self._spin_tick)
-        self._rainbow_timer = self.set_interval(self.RAINBOW_INTERVAL, self._rainbow_tick)
+        self._rainbow_timer = self.set_interval(
+            self.RAINBOW_INTERVAL, self._rainbow_tick, pause=True
+        )
+
+    def set_animation_active(self, active: bool) -> None:
+        """Pause header animation while typing so keystrokes stay responsive."""
+        self._animation_active = active
+        if self._spin_timer is not None:
+            if active:
+                self._spin_timer.resume()
+            else:
+                self._spin_timer.pause()
+        if self._rainbow_timer is not None:
+            if active and self.is_tall and not self._engine.done:
+                self._rainbow_timer.resume()
+            else:
+                self._rainbow_timer.pause()
 
     def _spin_tick(self) -> None:
-        if self._engine.done:
+        if not self._animation_active or self._engine.done:
             return
         self._engine.tick()
         self.refresh()
+        if self._engine.done and self._rainbow_timer is not None:
+            self._rainbow_timer.pause()
 
     def _rainbow_tick(self) -> None:
+        if not self._animation_active or not self.is_tall or self._engine.done:
+            return
         self.refresh()
 
     def respin(self) -> None:
         """Restart the logo reel intro (used on screen changes / click)."""
         self._engine.reset()
-        self._spin_timer.resume()
+        if self._animation_active and self._spin_timer is not None:
+            self._spin_timer.resume()
+        if self._rainbow_timer is not None:
+            self._rainbow_timer.pause()
         self.refresh()
 
     def on_click(self) -> None:

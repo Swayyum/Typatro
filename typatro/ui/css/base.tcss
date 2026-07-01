@@ -315,6 +315,26 @@ JokerRow {
     color: $sub-color;
     text-style: italic;
   }
+
+  .--joker-icon {
+    color: $gold-color;
+    text-style: bold;
+  }
+
+  .--joker-name {
+    color: $text-color;
+    text-style: bold;
+  }
+
+  .--joker-mult {
+    color: $mult-color;
+    text-style: bold;
+  }
+
+  .--joker-chips {
+    color: $chips-color;
+    text-style: bold;
+  }
 }
 
 /* Run mode: full-screen dither on the backdrop layer only; chrome stays readable. */
