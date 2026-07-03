@@ -1,4 +1,4 @@
-"""Animated swirling dither backdrop, Balatro main-menu style."""
+"""Animated terminal-native shader backdrop, Balatro main-menu style."""
 
 import time
 
@@ -7,14 +7,14 @@ from rich.style import Style
 from textual.widget import Widget
 
 from typatro.src.balatro_experience import is_balatro_experience
-from typatro.src.dither import render_lines
+from typatro.src.terminal_shader import TerminalShader
 
 
 class DitherBackground(Widget, can_focus=False):
-    """Slowly swirling field of dither characters in theme colors.
+    """Cached plasma/metaball dither field in theme colors.
 
-    Renders with run-grouped Rich Text (cheap), ticks at a modest rate, and
-    pauses its timer whenever the widget is hidden.
+    Precomputes a small loop of shader frames keyed by terminal size and
+    palette, ticks at ~2 FPS, and pauses while the user is typing or hidden.
     """
 
     DEFAULT_CSS = """
@@ -34,6 +34,7 @@ class DitherBackground(Widget, can_focus=False):
         self._phase = 0.0
         self._timer = None
         self._idle_timer = None
+        self._shader = TerminalShader()
 
     def on_mount(self) -> None:
         self.set_experience_active(is_balatro_experience())
@@ -105,4 +106,5 @@ class DitherBackground(Widget, can_focus=False):
             self._style_str(self.get_component_rich_style("--dither-mid")),
             self._style_str(self.get_component_rich_style("--dither-bright")),
         ]
-        return Group(*render_lines(width, height, self._phase, styles))
+        self._shader.configure(width, height, styles)
+        return Group(*self._shader.render(self._phase))

@@ -1,6 +1,6 @@
 [project]
 name = "typatro"
-version = "1.0.4"
+version = "1.0.5"
 description = "TYPATRO — a slot-machine typing roguelike for your terminal"
 readme = "README.md"
 license = "GPL-3.0-only"
