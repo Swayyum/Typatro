@@ -37,6 +37,10 @@ class Parser:
 
     def set(self, key: str, value: Any) -> None:
         self.config[key] = value
+        if key == "game_mode":
+            from typatro.src.balatro_experience import invalidate_balatro_cache
+
+            invalidate_balatro_cache()
         self.save()
 
     def update(self, data: Dict[str, Any]) -> None:

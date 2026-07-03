@@ -20,11 +20,21 @@ from textual.strip import Strip
 
 from typatro.src.balatro_experience import is_balatro_experience
 
+_EMPTY_STRIPS: dict[int, list[Strip]] = {}
+
+
+def _empty_strips(height: int) -> list[Strip]:
+    cached = _EMPTY_STRIPS.get(height)
+    if cached is None:
+        cached = [Strip([]) for _ in range(height)]
+        _EMPTY_STRIPS[height] = cached
+    return cached
+
 
 class DitherPassthrough:
     """Mixin: skip painting layout shells while Balatro run mode is active."""
 
     def render_lines(self, crop: Region) -> list[Strip]:
         if is_balatro_experience():
-            return [Strip([]) for _ in range(crop.height)]
+            return _empty_strips(crop.height)
         return super().render_lines(crop)

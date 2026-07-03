@@ -7,17 +7,28 @@ only affect colors; classic mode stays clean and minimal even with that theme.
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional
 
 from typatro.src.parser.config_parser import config_parser
 
 if TYPE_CHECKING:
     from textual.app import App
 
+_run_mode_cached: Optional[bool] = None
+
+
+def invalidate_balatro_cache() -> None:
+    """Clear cached run-mode flag after config changes."""
+    global _run_mode_cached
+    _run_mode_cached = None
+
 
 def is_balatro_experience() -> bool:
     """Return True when run-mode Balatro mechanics and flourishes are active."""
-    return config_parser.get("game_mode") == "run"
+    global _run_mode_cached
+    if _run_mode_cached is None:
+        _run_mode_cached = config_parser.get("game_mode") == "run"
+    return _run_mode_cached
 
 
 def _iter_screens(app: App):

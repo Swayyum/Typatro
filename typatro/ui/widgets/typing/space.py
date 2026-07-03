@@ -40,9 +40,6 @@ def _get_blind_card(space: "Space"):
         return None
 
 
-def _is_run_mode() -> bool:
-    return config_parser.get("game_mode") == "run"
-
 
 def tab_reset(func):
     def wrapper(space: "Space", key: str) -> None:
@@ -98,6 +95,9 @@ class Space(Static):
         self.target_score = 0
         self._styled_spans: List[Span] = []
         self._incorrect_space_positions: Set[int] = set()
+        self._corrupted_buf: Optional[List[str]] = None
+        self._corrupted_text: Optional[Text] = None
+        self._run_mode = False
         self._style_correct: Style = Style()
         self._style_incorrect: Style = Style()
         self._caret_style: Optional[Style] = None
@@ -154,9 +154,23 @@ class Space(Static):
         self._buddy_wpm = config_parser.get("cursor_buddy_speed")
         self._styles_initialized = True
 
-    def _ensure_styles(self) -> None:
-        if self.is_mounted and not self._styles_initialized:
-            self._cache_styles()
+    def _refresh_run_mode(self) -> None:
+        self._run_mode = config_parser.get("game_mode") == "run"
+
+    def _ensure_corrupted_buf(self) -> None:
+        if self._corrupted_buf is None:
+            self._corrupted_buf = list(self.paragraph.plain)
+
+    def _sync_corrupted_text(self) -> None:
+        if self._corrupted_buf is None:
+            self._corrupted_text = None
+            return
+        self._corrupted_text = Text("".join(self._corrupted_buf))
+
+    def _mark_incorrect_space(self, index: int) -> None:
+        self._ensure_corrupted_buf()
+        self._corrupted_buf[index] = _INCORRECT_SPACE_CHARACTER
+        self._sync_corrupted_text()
 
     # ---------------- UTILS -----------------
 
@@ -208,7 +222,7 @@ class Space(Static):
         score_state = None
         blind_beaten = False
 
-        if _is_run_mode():
+        if self._run_mode:
             score_state = self.scoring.finalize(self.tracker.stats)
             panel = self._score_panel or _get_score_panel(self)
             if panel:
@@ -261,7 +275,7 @@ class Space(Static):
         self.tracker = Tracker(self.paragraph.plain)
         self._update_run_visibility()
 
-        if _is_run_mode():
+        if self._run_mode:
             run_manager.state.apply_blind_debuffs()
             self.target_score = run_manager.state.target_score()
             self.scoring.reset(jokers=run_manager.state.jokers)
@@ -284,7 +298,9 @@ class Space(Static):
         self.cursor = 0
         self._styled_spans = []
         self._incorrect_space_positions = set()
+        self._clear_corrupted_text()
         self._styles_initialized = False
+        self._refresh_run_mode()
 
         if self.size.width:
             self.reset_newlines()
@@ -319,12 +335,18 @@ class Space(Static):
             self.paragraph.spans = spans
             return self.paragraph
 
-        buf = list(self.paragraph.plain)
-        for index in self._incorrect_space_positions:
-            buf[index] = _INCORRECT_SPACE_CHARACTER
-        text = Text("".join(buf))
-        text.spans = spans
-        return text
+        if self._corrupted_text is None:
+            self._sync_corrupted_text()
+        self._corrupted_text.spans = spans
+        return self._corrupted_text
+
+    def _ensure_styles(self) -> None:
+        if self.is_mounted and not self._styles_initialized:
+            self._cache_styles()
+
+    def _clear_corrupted_text(self) -> None:
+        self._corrupted_buf = None
+        self._corrupted_text = None
 
     def _truncate_styles(self, pos: int) -> None:
         trimmed: List[Span] = []
@@ -338,9 +360,17 @@ class Space(Static):
                 break
         self._styled_spans = trimmed
         if self._incorrect_space_positions:
-            self._incorrect_space_positions = {
-                index for index in self._incorrect_space_positions if index < pos
+            removed = {
+                index for index in self._incorrect_space_positions if index >= pos
             }
+            if removed and self._corrupted_buf is not None:
+                for index in removed:
+                    self._corrupted_buf[index] = " "
+            self._incorrect_space_positions -= removed
+            if not self._incorrect_space_positions:
+                self._clear_corrupted_text()
+            elif removed:
+                self._sync_corrupted_text()
 
     def _append_styled_span(self, start: int, end: int, style: Style) -> None:
         if end <= start:
@@ -370,6 +400,7 @@ class Space(Static):
             self._append_styled_span(new - 1, new, style)
             if not correct and self.paragraph.plain[new - 1] == " ":
                 self._incorrect_space_positions.add(new - 1)
+                self._mark_incorrect_space(new - 1)
 
     def _notify_typing_activity(self) -> None:
         if self._dither_bg is None:
@@ -405,10 +436,10 @@ class Space(Static):
                     self.parent.scroll_up()
 
         self.update_colors(cursor)
-        if _is_run_mode():
+        if self._run_mode:
             self._notify_typing_activity()
 
-        if _is_run_mode():
+        if self._run_mode:
             state = self.scoring.on_keystroke(cursor, self.tracker.stats)
             panel = self._score_panel or _get_score_panel(self)
             if panel:

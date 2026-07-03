@@ -8,8 +8,7 @@ TrackerFunc = Callable[..., Optional["Cursor"]]
 
 def force_correct(func: TrackerFunc) -> TrackerFunc:
     def wrapper(tracker: "Tracker", key: str) -> Optional[Cursor]:
-        setting = config_parser.get("force_correct") == "on"
-        if not setting or tracker.paragraph[tracker.cursor_pos] == key:
+        if not tracker._force_correct or tracker.paragraph[tracker.cursor_pos] == key:
             return func(tracker, key)
 
     return wrapper
@@ -17,7 +16,7 @@ def force_correct(func: TrackerFunc) -> TrackerFunc:
 
 def confidence_mode(func: TrackerFunc) -> TrackerFunc:
     def wrapper(tracker: "Tracker", *args, **kwargs) -> Optional[Cursor]:
-        setting = config_parser.get("confidence_mode")
+        setting = tracker._confidence_mode
         if setting == "max":
             return
 
@@ -36,7 +35,7 @@ def confidence_mode(func: TrackerFunc) -> TrackerFunc:
 
 def difficulty(func: TrackerFunc) -> TrackerFunc:
     def wrapper(tracker: "Tracker", key: str) -> Optional[Cursor]:
-        setting = config_parser.get("difficulty")
+        setting = tracker._difficulty
 
         if setting == "master" and tracker.paragraph[tracker.cursor_pos] != key:
             return
@@ -85,6 +84,9 @@ class Tracker:
         self.paragraph = paragraph
         self.stats = StatsTracker()
         self.cursor_pos = 0
+        self._force_correct = config_parser.get("force_correct") == "on"
+        self._confidence_mode = config_parser.get("confidence_mode")
+        self._difficulty = config_parser.get("difficulty")
 
     def keypress(self, key: str) -> Optional[Cursor]:
         res = None
