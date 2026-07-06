@@ -14,30 +14,27 @@ A slot-machine typing roguelike for your terminal. Type fast, build **Chips x Mu
 
 ## Install
 
+Requires Python 3.9+.
+
 ```bash
 pip install typatro
 ```
 
-For local development (recommended):
+To pin a specific version:
 
 ```bash
-cd Typatro
-uv sync
-source .venv/bin/activate
-typatro          # or: python -m typatro
+pip install typatro==1.0.6
 ```
 
-If `typatro` fails with `No module named 'typatro'`, recreate the venv:
+Then run:
 
 ```bash
-rm -rf .venv && uv sync && source .venv/bin/activate
+typatro
 ```
 
-Requires Python 3.9+. Homebrew Python blocks global `pip install`; a venv avoids that and keeps `typatro` on your PATH while activated. A [Nerd Font](https://www.nerdfonts.com/) improves the icons but isn't required.
+A [Nerd Font](https://www.nerdfonts.com/) improves the icons but isn't required.
 
 ## Play
-
-Activate the venv first (`source .venv/bin/activate`), then:
 
 ```bash
 typatro            # run mode (default)
@@ -67,6 +64,25 @@ Click **Run/Classic** in the strip above the typing area to switch modes.
 
 ## Development
 
+Clone the repo and set up a local environment:
+
+```bash
+cd Typatro
+uv sync
+source .venv/bin/activate
+typatro          # or: python -m typatro
+```
+
+If `typatro` fails with `No module named 'typatro'`, recreate the venv:
+
+```bash
+rm -rf .venv && uv sync && source .venv/bin/activate
+```
+
+Homebrew Python blocks global `pip install`; a venv avoids that and keeps `typatro` on your PATH while activated.
+
+Run tests:
+
 ```bash
 uv sync --all-groups
 uv run python -m pytest tests/
@@ -74,7 +90,7 @@ uv run python -m pytest tests/
 
 ## Release (TestPyPI)
 
-Build and upload a test release:
+Maintainer workflow — build and upload a test release:
 
 ```bash
 uv sync --all-groups
