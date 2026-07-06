@@ -66,4 +66,4 @@ Contributors: see [CONTRIBUTING.md](CONTRIBUTING.md) on GitHub.
 
 ## Credits & license
 
-GPL-3.0. TYPATRO by [Swayyum](https://github.com/Swayyum).
+Copyright © 2026 [Swayyum](https://github.com/Swayyum). TYPATRO is licensed under [GPL-3.0-only](LICENSE).

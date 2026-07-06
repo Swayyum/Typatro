@@ -2,6 +2,12 @@
 
 All notable changes to this project will be documented in this file.
 
+## 1.0.8
+
+### Changed
+
+- GPL-3.0 LICENSE copyright notice and `license-files` metadata for PyPI
+
 ## 1.0.7
 
 ### Changed

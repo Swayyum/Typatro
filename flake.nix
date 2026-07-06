@@ -14,7 +14,7 @@
       system:
       let
         name = "typatro";
-        version = "1.0.7";
+        version = "1.0.8";
 
         pkgs = import nixpkgs { inherit system; };
         python3 = pkgs.python312Packages;

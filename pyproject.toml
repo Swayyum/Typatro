@@ -1,9 +1,10 @@
 [project]
 name = "typatro"
-version = "1.0.7"
+version = "1.0.8"
 description = "TYPATRO — a slot-machine typing roguelike for your terminal"
 readme = "README.md"
 license = "GPL-3.0-only"
+license-files = ["LICENSE"]
 authors = [{ name = "swayam", email = "83102445+Swayyum@users.noreply.github.com" }]
 requires-python = ">=3.9"
 keywords = ["typing", "tui", "terminal", "game", "textual"]
