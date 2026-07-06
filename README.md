@@ -23,7 +23,7 @@ pip install typatro
 To pin a specific version:
 
 ```bash
-pip install typatro==1.0.6
+pip install typatro==1.0.7
 ```
 
 Then run:
@@ -62,52 +62,7 @@ typatro --classic  # plain typing test
 
 Click **Run/Classic** in the strip above the typing area to switch modes.
 
-## Development
-
-Clone the repo and set up a local environment:
-
-```bash
-cd Typatro
-uv sync
-source .venv/bin/activate
-typatro          # or: python -m typatro
-```
-
-If `typatro` fails with `No module named 'typatro'`, recreate the venv:
-
-```bash
-rm -rf .venv && uv sync && source .venv/bin/activate
-```
-
-Homebrew Python blocks global `pip install`; a venv avoids that and keeps `typatro` on your PATH while activated.
-
-Run tests:
-
-```bash
-uv sync --all-groups
-uv run python -m pytest tests/
-```
-
-## Release (TestPyPI)
-
-Maintainer workflow — build and upload a test release:
-
-```bash
-uv sync --all-groups
-uv run python -m build
-uv run twine upload --repository testpypi dist/*
-```
-
-Install from TestPyPI:
-
-```bash
-python3 -m venv /tmp/typatro-test
-source /tmp/typatro-test/bin/activate
-python -m pip install --index-url https://test.pypi.org/simple/ --extra-index-url https://pypi.org/simple/ typatro
-typatro --help
-```
-
-Use `--extra-index-url https://pypi.org/simple/` so dependencies resolve from the main PyPI index.
+Contributors: see [CONTRIBUTING.md](CONTRIBUTING.md) on GitHub.
 
 ## Credits & license
 
