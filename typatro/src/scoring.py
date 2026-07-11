@@ -134,6 +134,7 @@ class ScoringEngine:
                 last_word_perfect=last_word_perfect,
                 last_word_length=last_word_length,
                 last_char_was_capital=char.isupper() if char else False,
+                last_char=char or "",
                 word_just_completed=word_completed,
             )
             bonus_chips, bonus_mult = apply_joker_effects(self.jokers, ctx)

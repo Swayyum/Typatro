@@ -9,12 +9,22 @@ from typatro.src.jokers import (
     JokerDef,
     JokerEffect,
     JOKER_ROSTER,
+    MAX_JOKER_CHIPS_PER_KEYSTROKE,
     apply_joker_effects,
     JokerContext,
     get_joker_by_id,
     pick_random_jokers,
 )
-from typatro.src.blind import get_blind_for_index, compute_target, SMALL_BLIND
+from typatro.src.blind import (
+    BOSS_BLINDS,
+    BossBlind,
+    apply_boss_debuff,
+    clear_boss_debuffs,
+    get_blind_for_index,
+    compute_target,
+    SMALL_BLIND,
+)
+from typatro.src import config_parser
 from typatro.src.run_state import RunState
 
 
@@ -96,10 +106,125 @@ def test_joker_flat_mult():
     stats.start_time = 1.0
     ctx = JokerContext(stats=stats, streak=5, last_word_perfect=False,
                        last_word_length=0, last_char_was_capital=False,
-                       word_just_completed=False)
+                       last_char="", word_just_completed=False)
     chips, mult = apply_joker_effects([joker], ctx)
     assert mult == 2
     assert chips == 0
+
+
+def test_joker_roster_size():
+    assert len(JOKER_ROSTER) >= 22
+
+
+def test_joker_roster_unique_ids():
+    ids = [j.id for j in JOKER_ROSTER]
+    assert len(ids) == len(set(ids))
+
+
+def _ctx(**overrides):
+    stats = StatsTracker()
+    stats.start_time = 1.0
+    base = dict(
+        stats=stats,
+        streak=0,
+        last_word_perfect=False,
+        last_word_length=0,
+        last_char_was_capital=False,
+        last_char="",
+        word_just_completed=False,
+    )
+    base.update(overrides)
+    return JokerContext(**base)
+
+
+def test_joker_chips_short_word():
+    joker = get_joker_by_id("shortcut")
+    assert joker is not None
+    chips, mult = apply_joker_effects([joker], _ctx(word_just_completed=True, last_word_length=3))
+    assert chips == 6
+    assert mult == 0
+    chips, _ = apply_joker_effects([joker], _ctx(word_just_completed=True, last_word_length=4))
+    assert chips == 0
+
+
+def test_joker_chips_exact_word():
+    joker = get_joker_by_id("square")
+    assert joker is not None
+    chips, _ = apply_joker_effects([joker], _ctx(word_just_completed=True, last_word_length=4))
+    assert chips == 6
+    chips, _ = apply_joker_effects([joker], _ctx(word_just_completed=True, last_word_length=5))
+    assert chips == 0
+
+
+def test_joker_chips_on_punctuation():
+    joker = get_joker_by_id("business")
+    assert joker is not None
+    chips, _ = apply_joker_effects([joker], _ctx(last_char=","))
+    assert chips == 8
+    chips, _ = apply_joker_effects([joker], _ctx(last_char="a"))
+    assert chips == 0
+
+
+def test_joker_chips_on_digit():
+    joker = get_joker_by_id("smiley")
+    assert joker is not None
+    chips, _ = apply_joker_effects([joker], _ctx(last_char="7"))
+    assert chips == 6
+    chips, _ = apply_joker_effects([joker], _ctx(last_char="x"))
+    assert chips == 0
+
+
+def test_joker_mult_on_streak_tier():
+    joker = get_joker_by_id("ride_the_bus")
+    assert joker is not None
+    _, mult = apply_joker_effects([joker], _ctx(streak=10))
+    assert mult == 1.0
+    _, mult = apply_joker_effects([joker], _ctx(streak=3))
+    assert mult == 0.0
+
+
+def test_joker_mult_on_high_accuracy():
+    joker = get_joker_by_id("cloud_9")
+    assert joker is not None
+    stats = StatsTracker()
+    stats.start_time = 1.0
+    for i in range(10):
+        cp = CheckPoint("a", i + 1, Match.MATCH)
+        cp.elapsed = 0.1 * (i + 1)
+        stats.checkpoints.append(cp)
+    _, mult = apply_joker_effects([joker], _ctx(stats=stats))
+    assert mult == 2
+
+
+def test_joker_mult_on_word_complete():
+    joker = get_joker_by_id("the_duo")
+    assert joker is not None
+    _, mult = apply_joker_effects([joker], _ctx(word_just_completed=True))
+    assert mult == 1
+    _, mult = apply_joker_effects([joker], _ctx(word_just_completed=False))
+    assert mult == 0
+
+
+def test_joker_chips_per_keystroke_cap():
+    bootstraps = get_joker_by_id("bootstraps")
+    banner = get_joker_by_id("banner")
+    mime = get_joker_by_id("mime")
+    assert bootstraps is not None and banner is not None and mime is not None
+    chips, _ = apply_joker_effects(
+        [bootstraps, banner, mime, mime, mime, mime, mime],
+        _ctx(),
+    )
+    assert chips == MAX_JOKER_CHIPS_PER_KEYSTROKE
+
+
+def test_unknown_joker_effect_raises():
+    class _BadJoker:
+        effect = object()
+        value = 1
+        word_length = 0
+
+    with pytest.raises(ValueError, match="Unknown joker effect"):
+        apply_joker_effects([_BadJoker()], _ctx())
 
 
 def _simulate_typing(text: str, jokers=None) -> int:
@@ -162,6 +287,70 @@ def test_blind_target_scales():
     target_30 = compute_target(SMALL_BLIND, 30)
     target_60 = compute_target(SMALL_BLIND, 60)
     assert target_60 == target_30 * 2
+
+
+def test_boss_blind_count():
+    assert len(BOSS_BLINDS) >= 10
+    assert len(BossBlind) == len(BOSS_BLINDS)
+
+
+def test_boss_rotation_wraps_after_ten_antes():
+    """Boss index cycles with modulo len(BOSS_BLINDS)."""
+    ante_first = 1
+    ante_wrap = len(BOSS_BLINDS) + 1
+    first_boss = get_blind_for_index(2, ante_first)
+    wrap_boss = get_blind_for_index(2, ante_wrap)
+    assert first_boss.boss == wrap_boss.boss
+    assert first_boss.name == wrap_boss.name
+
+
+def test_boss_rotation_ante_six_is_sixth_boss():
+    run = RunState(ante=6, blind_index=2)
+    assert run.current_blind.boss == BOSS_BLINDS[5].boss
+    assert run.current_blind.name == "The Ox"
+
+
+@pytest.mark.parametrize(
+    "boss,expected_key,expected_value",
+    [
+        (BossBlind.THE_HOOK, "blind_mode", "on"),
+        (BossBlind.THE_NEEDLE, "min_speed", 40),
+        (BossBlind.THE_EYE, "confidence_mode", "on"),
+        (BossBlind.THE_PSYCHIC, "force_correct", "on"),
+        (BossBlind.THE_OX, "min_accuracy", 90),
+        (BossBlind.THE_MANACLE, "confidence_mode", "max"),
+        (BossBlind.THE_WATER, "min_burst", 80),
+        (BossBlind.THE_GOAD, "min_speed", 60),
+    ],
+)
+def test_apply_boss_debuff_sets_config(boss, expected_key, expected_value):
+    apply_boss_debuff(boss)
+    assert config_parser.get(expected_key) == expected_value
+
+
+def test_apply_boss_debuff_the_window():
+    apply_boss_debuff(BossBlind.THE_WINDOW)
+    assert config_parser.get("numbers") is True
+    assert config_parser.get("punctuations") is True
+
+
+def test_clear_boss_debuffs_resets_all_tweak_keys():
+    apply_boss_debuff(BossBlind.THE_WINDOW)
+    clear_boss_debuffs()
+    assert config_parser.get("blind_mode") in (False, "off", 0)
+    assert config_parser.get("min_speed") == 0
+    assert config_parser.get("min_accuracy") == 0
+    assert config_parser.get("min_burst") == 0
+    assert config_parser.get("confidence_mode") == "off"
+    assert config_parser.get("force_correct") in (False, "off", 0)
+    assert config_parser.get("capitalization_mode") == "off"
+    assert config_parser.get("numbers") in (False, "off", 0)
+    assert config_parser.get("punctuations") in (False, "off", 0)
+
+
+def test_every_boss_blind_is_handled():
+    for boss in BossBlind:
+        apply_boss_debuff(boss)  # raises ValueError if unhandled
 
 
 def test_run_state_advance():

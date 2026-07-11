@@ -28,6 +28,9 @@ _MULT_EFFECTS = frozenset(
         JokerEffect.FLAT_MULT,
         JokerEffect.MULT_ON_PERFECT_WORD,
         JokerEffect.MULT_ACCURACY,
+        JokerEffect.MULT_ON_STREAK_TIER,
+        JokerEffect.MULT_ON_HIGH_ACCURACY,
+        JokerEffect.MULT_ON_WORD_COMPLETE,
     }
 )
 

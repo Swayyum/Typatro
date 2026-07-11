@@ -21,6 +21,11 @@ class BossBlind(Enum):
     THE_NEEDLE = "the_needle"
     THE_EYE = "the_eye"
     THE_PSYCHIC = "the_psychic"
+    THE_OX = "the_ox"
+    THE_MANACLE = "the_manacle"
+    THE_WATER = "the_water"
+    THE_WINDOW = "the_window"
+    THE_GOAD = "the_goad"
 
 
 @dataclass(frozen=True)
@@ -69,6 +74,11 @@ BOSS_BLINDS = [
     BlindDef(BlindType.BOSS, "The Needle", 2.0, "+1 Joker pick", BossBlind.THE_NEEDLE),
     BlindDef(BlindType.BOSS, "The Eye", 2.0, "+1 Joker pick", BossBlind.THE_EYE),
     BlindDef(BlindType.BOSS, "The Psychic", 2.2, "+1 Joker pick", BossBlind.THE_PSYCHIC),
+    BlindDef(BlindType.BOSS, "The Ox", 2.1, "+1 Joker pick", BossBlind.THE_OX),
+    BlindDef(BlindType.BOSS, "The Manacle", 2.0, "+1 Joker pick", BossBlind.THE_MANACLE),
+    BlindDef(BlindType.BOSS, "The Water", 2.1, "+1 Joker pick", BossBlind.THE_WATER),
+    BlindDef(BlindType.BOSS, "The Window", 2.0, "+1 Joker pick", BossBlind.THE_WINDOW),
+    BlindDef(BlindType.BOSS, "The Goad", 2.2, "+1 Joker pick", BossBlind.THE_GOAD),
 ]
 
 ANTE_BLINDS: List[BlindDef] = [SMALL_BLIND, BIG_BLIND] + BOSS_BLINDS[:1]
@@ -89,8 +99,13 @@ def apply_boss_debuff(boss: Optional[BossBlind]) -> None:
     # Reset debuffs first
     config_parser.set("blind_mode", False)
     config_parser.set("min_speed", 0)
+    config_parser.set("min_accuracy", 0)
+    config_parser.set("min_burst", 0)
     config_parser.set("confidence_mode", "off")
     config_parser.set("force_correct", False)
+    config_parser.set("capitalization_mode", "off")
+    config_parser.set("numbers", False)
+    config_parser.set("punctuations", False)
 
     if not boss:
         return
@@ -98,13 +113,26 @@ def apply_boss_debuff(boss: Optional[BossBlind]) -> None:
     if boss == BossBlind.THE_HOOK:
         config_parser.set("blind_mode", "on")
     elif boss == BossBlind.THE_WALL:
-        pass  # Higher target handled in compute_target
+        pass  # Higher target handled in run_state.target_score
     elif boss == BossBlind.THE_NEEDLE:
         config_parser.set("min_speed", 40)
     elif boss == BossBlind.THE_EYE:
         config_parser.set("confidence_mode", "on")
     elif boss == BossBlind.THE_PSYCHIC:
         config_parser.set("force_correct", "on")
+    elif boss == BossBlind.THE_OX:
+        config_parser.set("min_accuracy", 90)
+    elif boss == BossBlind.THE_MANACLE:
+        config_parser.set("confidence_mode", "max")
+    elif boss == BossBlind.THE_WATER:
+        config_parser.set("min_burst", 80)
+    elif boss == BossBlind.THE_WINDOW:
+        config_parser.set("numbers", True)
+        config_parser.set("punctuations", True)
+    elif boss == BossBlind.THE_GOAD:
+        config_parser.set("min_speed", 60)
+    else:
+        raise ValueError(f"Unknown boss blind: {boss}")
 
 
 def clear_boss_debuffs() -> None:

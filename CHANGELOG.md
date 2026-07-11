@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+
+
+## 1.1.0
+
+### Added
+
+- **Boss blinds:** 10 boss blinds in rotation (5 new: The Ox, The Manacle, The Water, The Window, The Goad), each with distinct debuff behavior
+- **Jokers:** 26 jokers in the roster (13 new), including new `JokerEffect` types for exact/short word chips, punctuation and digit bonuses, streak-tier mult, high-accuracy mult, and mult on word completion
+- Joker card art mappings for expanded roster
+
 ## 1.0.8
 
 ### Changed
