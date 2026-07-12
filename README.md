@@ -18,25 +18,14 @@ typatro
 
 A [Nerd Font](https://www.nerdfonts.com/) improves suit icons and UI glyphs but is not required.
 
----
+![TYPATRO run mode — blind sidebar, live Chips × Mult score, and typing area](docs/images/hero.png)
 
-```
-    ╭──────────────────────────────────────────────────────╮
-    │   ♠  ♥  ♣  ♦     T Y P A T R O     ♦  ♣  ♥  ♠   │
-    │        slot-machine typing roguelike · terminal TUI   │
-    ╰──────────────────────────────────────────────────────╯
+## Screenshots
 
-    ┌─ Run mode ─────────────────────────────────────────────────────┐
-    │ ┌ Sidebar ──────┐  ┌──────────────────────────────────────┐  │
-    │ │ Small Blind   │  │  The quick brown fox jumps over the    │  │
-    │ │ Round Score   │  │  lazy dog while the odometer rolls...  │  │
-    │ │  1,240 × 3.2  │  │                                      │  │
-    │ │ Jokers (2/5)  │  │  [ Run ]  [ Classic ]                │  │
-    │ └───────────────┘  └──────────────────────────────────────┘  │
-    └──────────────────────────────────────────────────────────────┘
-```
-
-> Screenshots coming soon. The layout above mirrors the in-game panel: Blind sidebar, live Chips × Mult score, and the typing area with mode toggle.
+| Run mode | Joker pick | Classic mode |
+|:---:|:---:|:---:|
+| ![Run mode with blind sidebar and live score](docs/images/run-mode.png) | ![Pick 1 of 3 jokers after beating a blind](docs/images/joker-pick.png) | ![Classic typing test — no blinds or jokers](docs/images/classic-mode.png) |
+| Blind ladder, Chips × Mult odometer, plasma backdrop | Beat a blind, choose a power-up | Plain practice when you just want to type |
 
 ## Features
 
