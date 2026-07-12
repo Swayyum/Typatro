@@ -1,16 +1,11 @@
 # TYPATRO
 
-A slot-machine typing roguelike for your terminal. Type fast, build **Chips x Mult**, beat Blinds, collect Jokers, and climb Antes — all wrapped in a casino-felt TUI with slot-reel animations.
+**A slot-machine typing roguelike for your terminal.** Type fast, stack **Chips × Mult**, beat Blinds, collect Jokers, and climb endless Antes — all in a casino-felt TUI with reel-spin animations and a plasma shader backdrop.
 
-## Features
-
-- **Slot machine feel** — reel-spin title intro, odometer score tally that rolls as you type, digit-spin result reveals
-- **Balatro-inspired game panel** — left sidebar with your current Blind, live Round Score (Chips x Mult), and held Jokers
-- **Chips x Mult scoring** — +1 chip per correct character, +10 per word, mult scales with accuracy and error-free streaks
-- **Blinds** — Small, Big, and Boss Blinds with score targets; bosses impose debuffs (hidden mistakes, minimum speed, no backspace, forced accuracy)
-- **Jokers** — beat a blind, pick 1 of 3; up to 5 held jokers modify your scoring
-- **Ante loop** — Small -> Big -> Boss, then the next ante with higher targets; run state persists between sessions
-- **Classic mode** — a plain typing test when you just want to practice
+[![PyPI version](https://img.shields.io/pypi/v/typatro)](https://pypi.org/project/typatro/)
+[![Python versions](https://img.shields.io/pypi/pyversions/typatro)](https://pypi.org/project/typatro/)
+[![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
+[![Release](https://github.com/Swayyum/Typatro/actions/workflows/publish-pypi.yml/badge.svg)](https://github.com/Swayyum/Typatro/actions/workflows/publish-pypi.yml)
 
 ## Install
 
@@ -18,21 +13,44 @@ Requires Python 3.9+.
 
 ```bash
 pip install typatro
-```
-
-To pin a specific version:
-
-```bash
-pip install typatro==1.0.7
-```
-
-Then run:
-
-```bash
 typatro
 ```
 
-A [Nerd Font](https://www.nerdfonts.com/) improves the icons but isn't required.
+A [Nerd Font](https://www.nerdfonts.com/) improves suit icons and UI glyphs but is not required.
+
+---
+
+```
+    ╭──────────────────────────────────────────────────────╮
+    │   ♠  ♥  ♣  ♦     T Y P A T R O     ♦  ♣  ♥  ♠   │
+    │        slot-machine typing roguelike · terminal TUI   │
+    ╰──────────────────────────────────────────────────────╯
+
+    ┌─ Run mode ─────────────────────────────────────────────────────┐
+    │ ┌ Sidebar ──────┐  ┌──────────────────────────────────────┐  │
+    │ │ Small Blind   │  │  The quick brown fox jumps over the    │  │
+    │ │ Round Score   │  │  lazy dog while the odometer rolls...  │  │
+    │ │  1,240 × 3.2  │  │                                      │  │
+    │ │ Jokers (2/5)  │  │  [ Run ]  [ Classic ]                │  │
+    │ └───────────────┘  └──────────────────────────────────────┘  │
+    └──────────────────────────────────────────────────────────────┘
+```
+
+> Screenshots coming soon. The layout above mirrors the in-game panel: Blind sidebar, live Chips × Mult score, and the typing area with mode toggle.
+
+## Features
+
+| | |
+|---|---|
+| **Chips × Mult scoring** | +1 chip per correct character, +10 per word; mult scales with accuracy and error-free streaks |
+| **Blind ladder** | Small → Big → Boss each ante; score targets scale exponentially as you climb |
+| **10 boss blinds** | Rotating bosses with distinct debuffs — hidden mistakes, speed floors, no backspace, forced accuracy, and more |
+| **26 jokers** | Beat a blind, pick 1 of 3; hold up to 5 jokers that modify chips, mult, streaks, and word bonuses |
+| **Endless antes** | Run state persists between sessions; lose a blind and retry, or reset from Settings |
+| **Classic mode** | Plain typing test when you just want to practice — no blinds, no jokers |
+| **170+ themes** | Full Textual theme library plus a dedicated Balatro palette; switch live with `Ctrl+T` |
+| **Terminal shader** | Cached plasma-metaball backdrop behind the felt panel — pauses while you type for smooth input |
+| **Slot machine feel** | Reel-spin title intro, odometer score tally, digit-spin result reveals |
 
 ## Play
 
@@ -40,14 +58,6 @@ A [Nerd Font](https://www.nerdfonts.com/) improves the icons but isn't required.
 typatro            # run mode (default)
 typatro --classic  # plain typing test
 ```
-
-## How a run works
-
-1. The sidebar shows your current **Blind** and its score target
-2. Type the paragraph — the **Round Score** odometer rolls up with every keystroke
-3. Hit the target before the test ends to beat the blind
-4. Pick a **Joker** and advance; bosses add debuffs and bigger targets
-5. Lose a blind? Retry it. Want a fresh start? Settings -> Danger Zone -> Reset Run
 
 ### Controls
 
@@ -60,10 +70,44 @@ typatro --classic  # plain typing test
 | Ctrl+T | Themes |
 | Ctrl+L | Languages |
 
-Click **Run/Classic** in the strip above the typing area to switch modes.
+Click **Run / Classic** in the strip above the typing area to switch modes.
 
-Contributors: see [CONTRIBUTING.md](CONTRIBUTING.md) on GitHub.
+## How a run works
+
+```mermaid
+flowchart LR
+    A[Start / Resume Run] --> B[Small Blind]
+    B --> C[Big Blind]
+    C --> D[Boss Blind]
+    D --> E{Beat target?}
+    E -->|Yes| F[Pick 1 of 3 Jokers]
+    F --> G[Next Ante]
+    G --> B
+    E -->|No| H[Retry Blind]
+    H --> B
+```
+
+1. The sidebar shows your current **Blind** and its score target.
+2. Type the paragraph — the **Round Score** odometer rolls up with every keystroke.
+3. Hit the target before the test ends to beat the blind.
+4. Pick a **Joker** and advance; bosses add debuffs and bigger targets.
+5. Lose a blind? Retry it. Want a fresh start? **Settings → Danger Zone → Reset Run**.
+
+## Content at a glance
+
+| Category | Count | Notes |
+|----------|------:|-------|
+| Boss blinds | 10 | Rotates by ante — The Hook, The Wall, The Needle, The Eye, The Psychic, The Ox, The Manacle, The Water, The Window, The Goad |
+| Jokers | 26 | Flat mult, per-word chips, streak bonuses, accuracy scaling, punctuation/digit rewards, and more |
+| Themes | 170+ | Includes `balatro`, `terminal`, `dracula`, `nord`, and the full Monkeytype-derived palette |
+| Game modes | 2 | **Run** (roguelike) and **Classic** (practice) |
+
+## Contributing
+
+Bug reports, feature ideas, themes, and pull requests are welcome. See **[CONTRIBUTING.md](CONTRIBUTING.md)** for local setup, coding conventions, and release notes for maintainers.
 
 ## Credits & license
 
 Copyright © 2026 [Swayyum](https://github.com/Swayyum). TYPATRO is licensed under [GPL-3.0-only](LICENSE).
+
+Inspired by [Balatro](https://www.playbalatro.com/) and the terminal typing-test tradition. Not affiliated with either.
