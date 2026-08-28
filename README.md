@@ -6,6 +6,7 @@
 [![Python versions](https://img.shields.io/pypi/pyversions/typatro)](https://pypi.org/project/typatro/)
 [![License: GPL v3](https://img.shields.io/badge/License-GPLv3-blue.svg)](https://www.gnu.org/licenses/gpl-3.0)
 [![Release](https://github.com/Swayyum/Typatro/actions/workflows/publish-pypi.yml/badge.svg)](https://github.com/Swayyum/Typatro/actions/workflows/publish-pypi.yml)
+[![PyPI Downloads](https://static.pepy.tech/personalized-badge/typatro?period=total&units=INTERNATIONAL_SYSTEM&left_color=BLACK&right_color=GREEN&left_text=downloads)](https://pepy.tech/projects/typatro)
 
 ## Install
 
